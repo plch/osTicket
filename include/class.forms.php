@@ -13,7 +13,7 @@
 
     vim: expandtab sw=4 ts=4 sts=4:
 **********************************************************************/
-
+require_once(INCLUDE_DIR . "class.json.php");
 /**
  * Form template, used for designing the custom form and for entering custom
  * data for a ticket
@@ -194,6 +194,22 @@ class Form {
             $this->instructions = $options['instructions'];
         $form = $this;
         $template = $options['template'] ?: 'dynamic-form.tmpl.php';
+        if (isset($options['staff']) && $options['staff'])
+            include(STAFFINC_DIR . 'templates/' . $template);
+        else
+            include(CLIENTINC_DIR . 'templates/' . $template);
+        echo $this->getMedia();
+    }
+
+    function renderAsTable($options=array(), $tableData=array()) {
+        if (isset($options['title']))
+            $this->title = $options['title'];
+        if (isset($options['instructions']))
+            $this->instructions = $options['instructions'];
+        $form = $this;
+        $formData = $tableData;
+
+        $template = $options['template'] ?: 'dynamic-form-table.tmpl.php';
         if (isset($options['staff']) && $options['staff'])
             include(STAFFINC_DIR . 'templates/' . $template);
         else
@@ -565,6 +581,7 @@ class FormField {
             'files' => array(   /* @trans */ 'File Upload', 'FileUploadField'),
             'break' => array(   /* @trans */ 'Section Break', 'SectionBreakField'),
             'info' => array(    /* @trans */ 'Information', 'FreeTextField'),
+            'table' => array(   /* @trans */ 'Table', 'TableField'),
         ),
     );
     static $more_types = array();
@@ -3820,11 +3837,14 @@ class TextboxWidget extends Widget {
 
     function render($options=array(), $extraConfig=false) {
         $config = $this->field->getConfiguration();
+        $use_name_instead_of_id = false;
+
         if (is_array($extraConfig)) {
             foreach ($extraConfig as $k=>$v)
                 if (!isset($config[$k]) || !$config[$k])
                     $config[$k] = $v;
         }
+        
         if (isset($config['size']))
             $size = "size=\"{$config['size']}\"";
         if (isset($config['length']) && $config['length'])
@@ -3839,6 +3859,10 @@ class TextboxWidget extends Widget {
             $disabled = 'disabled="disabled"';
         if (isset($config['translatable']) && $config['translatable'])
             $translatable = 'data-translate-tag="'.$config['translatable'].'"';
+        if (isset($options['in_table']) && $options['in_table']) {
+            $use_name_instead_of_id = true;
+        }
+        
         $type = static::$input_type;
         $types = array(
             'email' => 'email',
@@ -3850,7 +3874,11 @@ class TextboxWidget extends Widget {
             $config['placeholder']));
         ?>
         <input type="<?php echo $type; ?>"
+            <?php if ($use_name_instead_of_id) { ?>
+            name="<?php echo $this->name; ?>[]"    
+            <?php } else { ?>
             id="<?php echo $this->id; ?>"
+            <?php } ?>
             <?php echo implode(' ', array_filter(array(
                 $size, $maxlength, $classes, $autocomplete, $disabled,
                 $translatable, $placeholder, $autofocus))); ?>
@@ -5421,4 +5449,135 @@ class TransferForm extends Form {
  * saved in the database (it wasn't changed in the request)
  */
 class FieldUnchanged extends Exception {}
+
+/**
+ * PLCH Additions
+ *  */   
+
+class TableField extends FormField {
+    static $widget = 'TableFieldWidget';
+
+    function getFormChoices() {
+        $forms = DynamicForm::objects()
+            ->filter(array('type'=>'G'))
+            ->exclude(array('flags__hasbit' => DynamicForm::FLAG_DELETED));
+
+        $formChoices = array();
+
+        foreach ($forms as $form) {
+            $formChoices[$form->id] = $form->getTitle();
+        }
+
+        return $formChoices;
+    }
+
+    function getConfigurationOptions() {
+        return array(
+            'form' => new ChoiceField(array(
+                'id'=>1, 'label'=>__('Form'), 'required'=>true, 'default'=>'',
+                'choices' => $this->getFormChoices()
+            )));
+    }
+
+    function validateEntry($value) {
+        return;
+    }
+
+    function parse($value) {
+        return $value;
+    }
+
+    function to_database($value) {
+        return JsonDataEncoder::encode($value);
+    }
+
+    function to_php($value) {
+        return JsonDataParser::decode($value);
+    }
+
+    function display($value) {
+        $output = '<table class="table-form-display"><thead><tr>';
+
+        $form = DynamicForm::lookup($this->getConfiguration()['form'])->getForm();
+        $fields = $form->getFields();
+        foreach ($fields as $field) {
+            $output = $output . '<td><div>' . $field->getLabel() . '</div></td>';
+        }
+
+        $output = $output . '</tr></thead><tbody>';
+
+        foreach ($value as $tuple) {
+            $output = $output . '<tr>';
+            foreach ($tuple as $item) {
+                $output = $output . '<td><div>' . $item . '</div></td>';
+            }
+
+            $output = $output . '</tr>';
+        }
+
+
+        return ($output . '</tbody></table>');
+    } 
+} 
+
+class TableFieldWidget extends Widget {
+    function render($options=array(), $extraConfig=false) {
+        $config = $this->field->getConfiguration();
+        if (is_array($extraConfig)) {
+            foreach ($extraConfig as $k=>$v)
+                if (!isset($config[$k]) || !$config[$k])
+                    $config[$k] = $v;
+        }
+
+        $form = DynamicForm::lookup($config['form'])->getForm();
+
+        ?>
+        <div><?php echo $form->renderAsTable(array(), $this->value) ?></div>
+        <?php
+    }
+
+    function parseValue() {
+        $this->value = $this->getValue();
+        
+        if (!isset($this->value) && isset($this->field->value))
+            $this->value = $this->field->value;
+
+        if (!isset($this->value) && is_object($this->field->getAnswer())) {
+            $this->value = $this->field->getAnswer()->getValue();
+        }
+    }
+
+    function getValue() {
+        $config = $this->field->getConfiguration();
+        if (is_array($extraConfig)) {
+            foreach ($extraConfig as $k=>$v)
+                if (!isset($config[$k]) || !$config[$k])
+                    $config[$k] = $v;
+        }
+
+        $form = DynamicForm::lookup($config['form'])->getForm();       
+        $data = $this->field->getSource();
+        
+        if (empty($data)) return null;
+
+        $fields = $form->getFields();
+        $value = array();
+        foreach ($fields as $field) {
+            if (isset($data[$field->getWidget()->name])) {
+                foreach ($data[$field->getWidget()->name] as $i => $item)
+                {
+                    if (!isset($value[$i])) {
+                        $value[$i] = array();
+                    }
+
+                    $value[$i][] = $data[$field->getWidget()->name][$i];
+                }
+            } 
+        }
+
+        if (empty($value)) return null;
+
+        return $value;
+    }
+}
 ?>

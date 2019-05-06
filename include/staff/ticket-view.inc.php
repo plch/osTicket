@@ -640,7 +640,7 @@ foreach (DynamicFormEntry::forTicket($ticket->getId()) as $form) {
                   <?php
                     if (is_string($v) && $isFile && !$isEmpty) {
                       echo "<i class=\"icon-edit\"></i>";
-                    } elseif (strlen($v) > 200) {
+                    } elseif (strlen($v) > 200 && !($field instanceof TableField)) {
                       echo Format::truncate($v, 200);
                       echo "<br><i class=\"icon-edit\"></i>";
                     }

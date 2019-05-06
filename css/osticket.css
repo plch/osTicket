@@ -85,3 +85,9 @@ input.dp {
 .delete-draft:hover {
     background-color: #fc9f41 !important;
 }
+
+a:hover .table-form-display {
+    text-decoration: none;
+    color: #368fff;
+    background-color:#e4eAee
+}
