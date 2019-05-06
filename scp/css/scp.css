@@ -3657,3 +3657,28 @@ img.avatar + img.avatar {
     height: auto;
     max-height: 400px !important;
 }
+
+.table-form-display {
+    border-collapse: collapse;
+    border: 1px #aaa solid;
+}
+
+.table-form-display td {
+    padding: 2px 5px;
+    text-align: center;
+}
+
+.table-form-display thead td {
+    background-color: #d4dAee;
+    color: black;
+}
+
+a:hover .table-form-display td > div {
+    display: inline-block;
+    text-decoration: none;
+}
+
+a:hover .table-form-display {
+    border: 1px #333 outset;
+
+}
