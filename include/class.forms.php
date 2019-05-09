@@ -165,7 +165,6 @@ class Form {
     }
 
     function addError($message, $index=false) {
-
         if ($index)
             $this->_errors[$index] = $message;
         else
@@ -201,13 +200,14 @@ class Form {
         echo $this->getMedia();
     }
 
-    function renderAsTable($options=array(), $tableData=array()) {
+    function renderAsTable($options=array(), $tableData=array(), $tableErrors=array()) {
         if (isset($options['title']))
             $this->title = $options['title'];
         if (isset($options['instructions']))
             $this->instructions = $options['instructions'];
         $form = $this;
         $formData = $tableData;
+        $formErrors = $tableErrors;
 
         $template = $options['template'] ?: 'dynamic-form-table.tmpl.php';
         if (isset($options['staff']) && $options['staff'])
@@ -683,6 +683,11 @@ class FormField {
     function errors() {
         return $this->_errors;
     }
+
+    function setErrors($errors) {
+        $this->_errors = $errors;
+    }
+
     function addError($message, $index=false) {
         if ($index)
             $this->_errors[$index] = $message;
@@ -5455,7 +5460,7 @@ class FieldUnchanged extends Exception {}
  *  */   
 
 class TableField extends FormField {
-    static $widget = 'TableFieldWidget';
+    static $widget = 'TableWidget';
 
     function getFormChoices() {
         $forms = DynamicForm::objects()
@@ -5480,7 +5485,34 @@ class TableField extends FormField {
     }
 
     function validateEntry($value) {
-        return;
+        $form = DynamicForm::lookup($this->getConfiguration()['form'])->getForm();
+        $fields = $form->getFields();
+        $has_errors = false;
+
+        foreach($value as $row) {
+            $idx = 0;
+
+            $row_errors = array();
+
+            foreach ($row as $field) {
+                $fields[$idx]->validateEntry($field);
+
+                if (!empty($fields[$idx]->errors())) {
+                    $row_errors[] = $fields[$idx]->errors();
+                    $has_errors = true;
+                } else {
+                    $row_errors[] = array();
+                }
+
+                $idx++;
+            }
+
+            $this->_errors[] = $row_errors;
+        }
+
+        if (!$has_errors) {
+            $this->_errors = array();
+        }
     }
 
     function parse($value) {
@@ -5508,8 +5540,12 @@ class TableField extends FormField {
 
         foreach ($value as $tuple) {
             $output = $output . '<tr>';
-            foreach ($tuple as $item) {
-                $output = $output . '<td><div>' . $item . '</div></td>';
+            foreach ($fields as $idx => $field) {
+                if (isset($tuple[$idx])) {
+                    $output = $output . '<td><div>' . $tuple[$idx] . '</div></td>';
+                } else {
+                    $output = $output . '<td>&nbsp;</td>';
+                }
             }
 
             $output = $output . '</tr>';
@@ -5520,7 +5556,7 @@ class TableField extends FormField {
     } 
 } 
 
-class TableFieldWidget extends Widget {
+class TableWidget extends Widget {
     function render($options=array(), $extraConfig=false) {
         $config = $this->field->getConfiguration();
         if (is_array($extraConfig)) {
@@ -5532,7 +5568,7 @@ class TableFieldWidget extends Widget {
         $form = DynamicForm::lookup($config['form'])->getForm();
 
         ?>
-        <div><?php echo $form->renderAsTable(array(), $this->value) ?></div>
+        <div><?php echo $form->renderAsTable(array(), $this->value, $this->field->errors()) ?></div>
         <?php
     }
 
@@ -5563,7 +5599,7 @@ class TableFieldWidget extends Widget {
         $fields = $form->getFields();
         $value = array();
         foreach ($fields as $field) {
-            if (isset($data[$field->getWidget()->name])) {
+            if (isset($data[$field->getWidget()->name]) && is_array($data[$field->getWidget()->name])) {
                 foreach ($data[$field->getWidget()->name] as $i => $item)
                 {
                     if (!isset($value[$i])) {

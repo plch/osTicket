@@ -3,9 +3,7 @@
 global $thisclient;
 //if (!$form->hasAnyVisibleFields($thisclient))
 //    return;
-if (empty($formData)) {
-    ?><div>Data is empty</div><?php
-    
+if (empty($formData)) {   
     $formData[] = array();
     foreach ($form->getFields() as $field) {
         $formData[0][] = null;
@@ -59,13 +57,14 @@ if (empty($formData)) {
             </td>
         <?php
     } ?>
+        <td></td>
         </tr>
         </thead>
         <tbody>
     <?php
-        foreach ($formData as $row) {
+        foreach ($formData as $rowIndex => $row) {
             ?> <tr> <?php
-            $index = 0;
+            $fieldIndex = 0;
             foreach ($form->getFields() as $field) {
                 try {
                     if (!$field->isEnabled())
@@ -82,8 +81,18 @@ if (empty($formData)) {
                     continue;
                 }
                 
-                if ($row[$index]) {
-                    $field->setValue($row[$index]);
+                if ($row[$fieldIndex]) {
+                    $field->setValue($row[$fieldIndex]);
+                }  else {
+                    $field->setValue(null);
+                }
+
+                if (!empty($formErrors)) {
+                    if ($formErrors[$rowIndex][$fieldIndex]) {
+                        $field->setErrors($formErrors[$rowIndex][$fieldIndex]);
+                    }
+                } else {
+                    $field->setErrors(array());
                 }
 
                 ?>
@@ -91,8 +100,9 @@ if (empty($formData)) {
                     <?php if ($field->isEditableToUsers() || $isCreate) {
                         $field->render(array('client'=>true, 'in_table'=>true));
                         ?></label><?php
+ 
                         foreach ($field->errors() as $e) { ?>
-                            <div class="error"><?php echo $e; ?></div>
+                            <div class="error" style="clear: both;"><?php echo $e; ?></div>
                         <?php }
                         $field->renderExtras(array('client'=>true));
                         } else {
@@ -106,25 +116,15 @@ if (empty($formData)) {
                     } ?>
                     </td>
                 <?php
-                $index++;
+                $fieldIndex++;
             } 
-            ?></tr><?php
+            ?>
+        <td><button type="button" class="remove-form-row" name="DeleteRow"><i class="icon-large icon-trash"></i></button></td>
+        </tr><?php
         }?>
          </tbody>
     <table>
-    <a href="#" class="add-form-row"><i class="icon-large icon-plus"></i>Add</a>
-    <script type="text/javascript">
-        $(function() {
-            $(".add-form-row").click(function(e){
-                e.preventDefault();
-
-                var template = $(this).closest(".table-form-container").find(".row-template").html();
-                var table = $(this).closest(".table-form-container").find(".table-form");
-
-                table.append(template);
-            });
-        });
-    </script>
+    <button type="button" class="add-form-row" name="AddRow"><i class="icon-large icon-plus"></i>Add</button>
     <script type="template/html" class="row-template">
     <tr>
         <?php
@@ -145,6 +145,7 @@ if (empty($formData)) {
                 }
 
                 $field->setValue(null);
+                $field->setErrors(array());
 
                 ?>
                     <td>
@@ -152,7 +153,7 @@ if (empty($formData)) {
                         $field->render(array('client'=>true, 'in_table'=>true));
                         ?></label><?php
                         foreach ($field->errors() as $e) { ?>
-                            <div class="error"><?php echo $e; ?></div>
+                            <div class="error" style="clear:both;"><?php echo $e; ?></div>
                         <?php }
                         $field->renderExtras(array('client'=>true));
                         } else {
@@ -167,6 +168,7 @@ if (empty($formData)) {
                     </td>
                 <?php
             } ?>
+            <td><button type="button" class="remove-form-row" name="DeleteRow"><i class="icon-large icon-trash"></i></button></td>
         </tr>
     </script>
 </div>

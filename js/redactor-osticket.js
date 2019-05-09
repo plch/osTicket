@@ -231,6 +231,8 @@ RedactorPlugins.signature = function() {
   }
 };
 
+var PLCH = PLCH || {};
+
 /* Redactor richtext init */
 $(function() {
     var captureImageSizes = function(html) {
@@ -374,6 +376,7 @@ $(function() {
     findRichtextBoxes();
     $(document).ajaxStop(findRichtextBoxes);
     $(document).on('pjax:start', cleanupRedactorElements);
+    PLCH.RedactorInit = findRichtextBoxes;
 });
 
 $(document).on('focusout.redactor', 'div.redactor_richtext', function (e) {

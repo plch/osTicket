@@ -5,7 +5,6 @@ global $thisclient;
 //    return;
 
 if (empty($data)) {
-    ?><div>Data is empty</div><?php
     $data[] = array();
 
     foreach ($form->getFields() as $field) {
@@ -33,19 +32,19 @@ if (empty($data)) {
         }
 
         if ($isCreate) {
-            if (!$field->isVisibleToUsers() && !$field->isRequiredForUsers())
+            if (!$field->isVisibleToStaff() && !$field->isRequiredForStaff())
                 continue;
-        } elseif (!$field->isVisibleToUsers()) {
+        } elseif (!$field->isVisibleToStaff()) {
             continue;
         }
         ?>
             <td>
             <?php if (!$field->isBlockLevel()) { ?>
                 <label for="<?php echo $field->getFormName(); ?>"><span class="<?php
-                    if ($field->isRequiredForUsers()) echo 'required'; ?>">
+                    if ($field->isRequiredForStaff()) echo 'required'; ?>">
                 <?php echo Format::htmlchars($field->getLocal('label')); ?>
-            <?php if ($field->isRequiredForUsers() &&
-                    ($field->isEditableToUsers() || $isCreate)) { ?>
+            <?php if ($field->isRequiredForStaff() &&
+                    ($field->isEditableToStaff() || $isCreate)) { ?>
                 <span class="error">*</span>
             <?php }
             ?></span><?php
@@ -60,13 +59,14 @@ if (empty($data)) {
             </td>
         <?php
     } ?>
+    <td></td>
         </tr>
         </thead>
         <tbody>
         <tr>
     <?php
-        foreach ($data as $row) {
-            $index = 0;
+        foreach ($data as $rowIndex => $row) {
+            $fieldIndex = 0;
             foreach ($form->getFields() as $field) {
                 try {
                     if (!$field->isEnabled())
@@ -77,24 +77,34 @@ if (empty($data)) {
                 }
         
                 if ($isCreate) {
-                    if (!$field->isVisibleToUsers() && !$field->isRequiredForUsers())
+                    if (!$field->isVisibleToStaff() && !$field->isRequiredForStaff())
                         continue;
-                } elseif (!$field->isVisibleToUsers()) {
+                } elseif (!$field->isVisibleToStaff()) {
                     continue;
                 }
                 
-                if ($row[$index]) {
-                    ?> <td> Set field value </td> <?php
-                    $field->value = $row[$index];
+                if ($row[$fieldIndex]) {
+                    $field->setValue($row[$fieldIndex]);
+                } else {
+                    $field->setValue(null);
+                }
+
+                if (!empty($formErrors)) {
+                    if ($formErrors[$rowIndex][$fieldIndex]) {
+                        $field->setErrors($formErrors[$rowIndex][$fieldIndex]);
+                    }
+                } else {
+                    $field->setErrors(array());
                 }
 
                 ?>
                     <td>
-                    <?php if ($field->isEditableToUsers() || $isCreate) {
+                    <?php if ($field->isEditableToStaff() || $isCreate) {
                         $field->render(array('client'=>true, 'in_table'=>true));
                         ?></label><?php
+                       
                         foreach ($field->errors() as $e) { ?>
-                            <div class="error"><?php echo $e; ?></div>
+                            <div class="error" style="clear:both;"><?php echo $e; ?></div>
                         <?php }
                         $field->renderExtras(array('client'=>true));
                         } else {
@@ -108,25 +118,14 @@ if (empty($data)) {
                     } ?>
                     </td>
                 <?php
-                $index++;
+                $fieldIndex++;
             } 
         }?>
+        <td><button class="remove-form-row" type="button" name="DeleteRow"><i class="icon-large icon-trash"></i></button></td>
         </tr>
         </tbody>
     <table>
-    <a href="#" class="add-form-row"><i class="icon-large icon-plus"></i>Add</a>
-    <script type="text/javascript">
-        $(function() {
-            $(".add-form-row").click(function(e){
-                e.preventDefault();
-
-                var template = $(this).closest(".table-form-container").find(".row-template").html();
-                var table = $(this).closest(".table-form-container").find(".table-form");
-
-                table.append(template);
-            });
-        });
-    </script>
+    <button type="button" class="add-form-row" name="AddRow"><i class="icon-large icon-plus"></i>Add</button>
     <script type="template/html" class="row-template">
     <tr>
         <?php
@@ -145,13 +144,17 @@ if (empty($data)) {
                 } elseif (!$field->isVisibleToUsers()) {
                     continue;
                 }
+
+                $field->setValue(null);
+                $field->setErrors(array());
+
                 ?>
                     <td>
                     <?php if ($field->isEditableToUsers() || $isCreate) {
                         $field->render(array('client'=>true, 'in_table'=>true));
                         ?></label><?php
                         foreach ($field->errors() as $e) { ?>
-                            <div class="error"><?php echo $e; ?></div>
+                            <div class="error" style="clear:both;"><?php echo $e; ?></div>
                         <?php }
                         $field->renderExtras(array('client'=>true));
                         } else {
@@ -166,6 +169,7 @@ if (empty($data)) {
                     </td>
                 <?php
             } ?>
+            <td><button type="button" class="remove-form-row" name="RemoveRow"><i class="icon-large icon-trash"></i></button></td>
         </tr>
     </script>
 </div>

@@ -1282,3 +1282,11 @@ img.avatar {
     margin-bottom: 0.3em;
     font-size: 1.1em;
 }
+
+#ticketForm table.table-form {
+  width: 100%;
+}
+
+#ticketForm table.table-form td {
+  width: auto;
+}

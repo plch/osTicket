@@ -1,5 +1,7 @@
 <?php
 
+define('SQLITE3_OPEN_READONLY', false);
+
 class GlobalConfig {
 	// Version and Info
 	public $version = "v0.4";

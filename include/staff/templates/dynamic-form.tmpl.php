@@ -95,9 +95,11 @@ if (isset($options['entry']) && $options['mode'] == 'edit') { ?>
                         echo Format::viewableImages($field->getLocal('hint')); ?></em>
                 <?php
                 }
-                foreach ($field->errors() as $e) { ?>
-                    <div class="error"><?php echo Format::htmlchars($e); ?></div>
-                <?php }
+                if (!($field instanceof TableField)) {
+                    foreach ($field->errors() as $e) { ?>
+                        <div class="error"><?php echo Format::htmlchars($e); ?></div>
+                    <?php }
+                }
             } else {
                 $val = '';
                 if ($field->value)
