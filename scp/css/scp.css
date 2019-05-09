@@ -3661,6 +3661,7 @@ img.avatar + img.avatar {
 .table-form-display {
     border-collapse: collapse;
     border: 1px #aaa solid;
+    border-radius: 5px 5px 0 0;
 }
 
 .table-form-display td {
@@ -3669,8 +3670,17 @@ img.avatar + img.avatar {
 }
 
 .table-form-display thead td {
-    background-color: #d4dAee;
+    background-color: white;
     color: black;
+    border-bottom: 1px solid #aaa;
+}
+
+.table-form-display tbody tr:nth-child(2n - 1) td {
+    background-color: #eee;
+}
+
+.table-form-display tbody tr:nth-child(2n) td {
+    background-color: white;
 }
 
 a:hover .table-form-display td > div {
@@ -3680,5 +3690,4 @@ a:hover .table-form-display td > div {
 
 a:hover .table-form-display {
     border: 1px #333 outset;
-
 }

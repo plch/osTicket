@@ -86,8 +86,37 @@ input.dp {
     background-color: #fc9f41 !important;
 }
 
-a:hover .table-form-display {
+.table-form-display {
+    border-collapse: collapse;
+    border: 1px #aaa solid;
+    border-radius: 5px 5px 0 0;
+}
+
+.table-form-display td {
+    padding: 5px 7px;
+    text-align: center;
+}
+
+.table-form-display thead td {
+    background-color: white;
+    color: black;
+    border-bottom: 1px solid #aaa;
+}
+
+.table-form-display tbody tr:nth-child(2n - 1) td {
+    background-color: #eee;
+}
+
+.table-form-display tbody tr:nth-child(2n) td {
+    background-color: white;
+}
+
+a:hover .table-form-display td > div {
+    display: inline-block;
     text-decoration: none;
-    color: #368fff;
-    background-color:#e4eAee
+}
+
+a:hover .table-form-display {
+    border: 1px #333 outset;
+
 }

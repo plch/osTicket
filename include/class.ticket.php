@@ -3858,9 +3858,20 @@ implements RestrictedAccess, Threadable, Searchable {
         // Save the (common) dynamic form
         // Ensure we have a subject
         $subject = $form->getAnswer('subject');
-        if ($subject && !$subject->getValue() && $topic)
-            $subject->setValue($topic->getFullName());
 
+        // try to pull a subject from the topic forms as well
+        foreach ($topic_forms as $topic_form) {
+            foreach ($topic_form->getFields() as $field) {
+                if ($field->get('name') == 'subject') {
+                    $subject->setValue($field->getClean());
+                }
+            }
+        }
+
+        if ($subject && !$subject->getValue() && $topic) {
+            $subject->setValue($topic->getFullName());
+        }
+        
         $form->setTicketId($ticket->getId());
         $form->save();
 
