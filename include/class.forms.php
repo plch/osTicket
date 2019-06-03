@@ -1411,6 +1411,27 @@ class FormField {
 class TextboxField extends FormField {
     static $widget = 'TextboxWidget';
 
+    function getFieldChoices() {
+        $form = $this->get('form');
+
+        if ($form) {
+            $fields = $form->getFields();
+
+            $fieldChoices = array();
+
+            foreach ($fields as $field) {
+                if (!$field instanceof BooleanField) continue;
+                if ($field->getId() == $this->getId()) continue;
+
+                $fieldChoices[$field->getId()] = $field->getLabel();
+            }
+
+            return $fieldChoices;
+        } else {
+            return array();
+        }
+    }
+
     function getConfigurationOptions() {
         return array(
             'size'  =>  new TextboxField(array(
@@ -1423,7 +1444,7 @@ class TextboxField extends FormField {
                 'id'=>3, 'label'=>__('Validator'), 'required'=>false, 'default'=>'',
                 'choices' => array('phone'=>__('Phone Number'),'email'=>__('Email Address'),
                     'ip'=>__('IP Address'), 'number'=>__('Number'),
-                    'regex'=>__('Custom (Regular Expression)'), ''=>__('None')))),
+                    'regex'=>__('Custom (Regular Expression)'), 'required_when'=>__('Required When (Select Field)'), ''=>__('None')))),
             'regex' => new TextboxField(array(
                 'id'=>6, 'label'=>__('Regular Expression'), 'required'=>true,
                 'configuration'=>array('size'=>40, 'length'=>100),
@@ -1446,6 +1467,12 @@ class TextboxField extends FormField {
                     if (false === @preg_match($v, ' '))
                         $self->addError(__('Cannot compile this regular expression'));
                 })),
+            'required_when' => new ChoiceField(array(
+                    'id'=>7, 'label'=>__('Select Field'), 'required'=>true,
+                    'visibility' => new VisibilityConstraint(
+                        new Q(array('validator__eq'=>'required_when')),
+                        VisibilityConstraint::HIDDEN
+                    ), 'choices' => $this->getFieldChoices())),
             'validator-error' => new TextboxField(array(
                 'id'=>4, 'label'=>__('Validation Error'), 'default'=>'',
                 'configuration'=>array('size'=>40, 'length'=>60,
@@ -3939,6 +3966,8 @@ class TextareaWidget extends Widget {
         $config = $this->field->getConfiguration();
         $class = $cols = $rows = $maxlength = "";
         $attrs = array();
+        $use_name_instead_of_id = false;
+
         if (isset($config['rows']))
             $rows = "rows=\"{$config['rows']}\"";
         if (isset($config['cols']))
@@ -3951,6 +3980,9 @@ class TextareaWidget extends Widget {
             $class = sprintf('class="%s"', implode(' ', $class));
             $this->value = Format::viewableImages($this->value);
         }
+        if (isset($options['in_table']) && $options['in_table']) {
+            $use_name_instead_of_id = true;
+        }
         if (isset($config['context']))
             $attrs['data-root-context'] = '"'.$config['context'].'"';
         ?>
@@ -3958,7 +3990,11 @@ class TextareaWidget extends Widget {
         <textarea <?php echo $rows." ".$cols." ".$maxlength." ".$class
                 .' '.Format::array_implode('=', ' ', $attrs)
                 .' placeholder="'.$config['placeholder'].'"'; ?>
+            <?php if ($use_name_instead_of_id) { ?>
+            name="<?php echo $this->name; ?>[]"    
+            <?php } else { ?>
             id="<?php echo $this->id; ?>"
+            <?php } ?>
             name="<?php echo $this->name; ?>"><?php
                 echo Format::htmlchars($this->value);
             ?></textarea>
@@ -3969,14 +4005,25 @@ class TextareaWidget extends Widget {
     function parseValue() {
         parent::parseValue();
         if (isset($this->value)) {
-            $value = $this->value;
             $config = $this->field->getConfiguration();
-            // Trim empty spaces based on text input type.
-            // Preserve original input if not empty.
-            if ($config['html'])
-                $this->value = trim($value, " <>br/\t\n\r") ? $value : '';
-            else
-                $this->value = trim($value) ? $value : '';
+            if (is_array($this->value)) {
+                $temp = $this->value;
+                $this->value = array();
+                foreach ($temp as $item) {
+                    if ($config['html'])
+                        $this->value[] = trim($item, " <>br/\t\n\r") ? $item : '';
+                    else
+                        $this->value[] = trim($item) ? $item : '';                    
+                }
+            } else {
+                $value = $this->value;
+                // Trim empty spaces based on text input type.
+                // Preserve original input if not empty.
+                if ($config['html'])
+                    $this->value = trim($value, " <>br/\t\n\r") ? $value : '';
+                else
+                    $this->value = trim($value) ? $value : '';
+            }
         }
     }
 
@@ -4032,6 +4079,17 @@ class ChoicesWidget extends Widget {
             $config['multiselect'] = true;
         }
 
+        $associated_field = null;
+        if ($config['restrict'] !== null) {         
+            $fields = $this->field->getForm()->getFields();
+
+            foreach ($fields as $field) {
+                if ($field->getId() == $config['restrict']) {
+                    $associated_field = $field;
+                }
+            }
+        }
+
         // Determine the value for the default (the one listed if nothing is
         // selected)
         $choices = $this->field->getChoices(true);
@@ -4066,6 +4124,9 @@ class ChoicesWidget extends Widget {
             $classes = 'class="'.$config['classes'].'"';
         ?>
         <select name="<?php echo $this->name; ?>[]"
+            <?php if ($associated_field !== null)
+                echo 'data-associated-field="' . $associated_field->getFormName() . '"';
+            ?>
             <?php echo implode(' ', array_filter(array($classes))); ?>
             id="<?php echo $this->id; ?>"
             <?php if (isset($config['data']))
@@ -4097,16 +4158,28 @@ class ChoicesWidget extends Widget {
 
     function emitChoices($choices, $values=array(), $have_def=false, $def_key=null) {
         reset($choices);
-        if (is_array(current($choices)) || current($choices) instanceof Traversable)
+        $current = current($choices);
+
+        if ((is_array($current) && $current['associated_type'] == null) || $current instanceof Traversable)
             return $this->emitComplexChoices($choices, $values, $have_def, $def_key);
 
-        foreach ($choices as $key => $name) {
+        foreach ($choices as $key => $value) {
             if (!$have_def && $key == $def_key)
-                continue; ?>
-            <option value="<?php echo $key; ?>" <?php
+                continue; 
+
+            if (is_array($value))
+            {
+                ?><option value="<?php echo $key; ?>" data-associated-type="<?php echo $value['associated_type'] ?>" <?php
                 if (isset($values[$key])) echo 'selected="selected"';
-            ?>><?php echo Format::htmlchars($name); ?></option>
+                ?>><?php echo Format::htmlchars($value['name']); ?></option><?php
+            }
+            else
+            {
+            ?><option value="<?php echo $key; ?>" <?php
+                if (isset($values[$key])) echo 'selected="selected"';
+            ?>><?php echo Format::htmlchars($value); ?></option>
         <?php
+            }
         }
     }
 
@@ -5542,7 +5615,16 @@ class TableField extends FormField {
             $output = $output . '<tr>';
             foreach ($fields as $idx => $field) {
                 if (isset($tuple[$idx])) {
-                    $output = $output . '<td><div>' . $tuple[$idx] . '</div></td>';
+                    if ($field instanceof SelectionField)
+                    {
+                        $index = (int)$tuple[$idx];
+                        $selections = array($index => $tuple[$idx]);
+                        $output = $output . '<td><div>' . $field->display($selections) . '</div></td>';
+                    }
+                    else
+                    {
+                        $output = $output . '<td><div>' . $field->display($tuple[$idx]) . '</div></td>';
+                    }
                 } else {
                     $output = $output . '<td>&nbsp;</td>';
                 }
