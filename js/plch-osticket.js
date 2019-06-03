@@ -26,4 +26,39 @@ $(function() {
             $(".remove-form-row", table).hide();      
         }
     });
+
+    $(document).on("formLoaded", function (e) {
+        $("select").each(function (index) {
+            var assocFieldName = $(this).data("associatedField");
+
+            if (assocFieldName && assocFieldName !== "") {
+                var associatedField = $(this).closest("tr").find("[name^='" + assocFieldName + "']");
+
+                $(this).prop("disabled", "disabled");
+                var _this = this;
+                associatedField.on("change", function (e) {  
+                    if ($(_this).children("option[data-associated-type='" + $("option:selected", this).text() + "']").length > 0)
+                    {       
+                        $(_this).children("option").show();    
+                        $(_this).children("option[data-associated-type!='" + $("option:selected", this).text() + "']").hide();
+
+                        $(_this).prop("disabled", false);
+                    }
+                    else
+                    {
+                        $(_this).val("");
+                        $(_this).prop("disabled", "disabled");
+                    }
+                });
+            }
+        });
+    });
+
+    $(document).on("click", ".user-options-link", function() {
+        if ($(this).parent().children("ul").is(":visible")) {
+            $(this).parent().children("ul").hide();
+        } else {
+            $(this).parent().children("ul").show();
+        }
+    });
 });

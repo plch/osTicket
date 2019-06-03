@@ -1490,6 +1490,8 @@ class SelectionField extends FormField {
         if (!is_array($value)
                 || !$thisstaff // Only agents can preview for now
                 || !($list=$this->getList()))
+            if ($value == 0) return parent::display('');
+
             return parent::display($value);
 
         $display = array();
@@ -1664,6 +1666,27 @@ class SelectionField extends FormField {
         }
     }
 
+    function getFieldChoices() {
+        $form = $this->get('form');
+
+        if ($form) {
+            $fields = $form->getFields();
+
+            $fieldChoices = array();
+
+            foreach ($fields as $field) {
+                if (!$field instanceof SelectionField) continue;
+                if ($field->getId() == $this->getId()) continue;
+
+                $fieldChoices[$field->getId()] = $field->getLabel();
+            }
+
+            return $fieldChoices;
+        } else {
+            return array();
+        }
+    }
+
     function getConfigurationOptions() {
         return array(
             'multiselect' => new BooleanField(array(
@@ -1690,6 +1713,11 @@ class SelectionField extends FormField {
                     VisibilityConstraint::HIDDEN
                 ),
                 'hint'=>__('Typeahead will work better for large lists')
+            )),
+            'restrict' => new ChoiceField(array(
+                'id'=>6, 'label'=>__('Restrict by Associated Type'), 'required'=>false, 'default'=>'',
+                'configuration'=>array('desc'=>__('Restricted selections by the selected field')),
+                'choices' => $this->getFieldChoices()
             )),
             'validator-error' => new TextboxField(array(
                 'id'=>5, 'label'=>__('Validation Error'), 'default'=>'',
@@ -1734,8 +1762,16 @@ class SelectionField extends FormField {
     function getChoices($verbose=false) {
         if (!$this->_choices || $verbose) {
             $choices = array();
-            foreach ($this->getList()->getItems() as $i)
-                $choices[$i->getId()] = $i->getValue();
+            foreach ($this->getList()->getItems() as $i) {
+                if ($i->hasProperties() && $i->getVar('associated_type'))
+                {
+                    $choices[$i->getId()] = array('name' => $i->getValue(), 'associated_type' => $i->getVar('associated_type'));
+                }
+                else
+                {
+                    $choices[$i->getId()] = $i->getValue();
+                }              
+            }
 
             // Retired old selections
             $values = ($a=$this->getAnswer()) ? $a->getValue() : array();

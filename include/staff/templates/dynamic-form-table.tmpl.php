@@ -91,7 +91,7 @@ if (empty($data)) {
 
                 if (!empty($formErrors)) {
                     if ($formErrors[$rowIndex][$fieldIndex]) {
-                        $field->setErrors($formErrors[$rowIndex][$fieldIndex]);
+                        $field->setErrors($formErrors[$rowIndex][$fieldIndex] ?: array());
                     }
                 } else {
                     $field->setErrors(array());
@@ -102,7 +102,6 @@ if (empty($data)) {
                     <?php if ($field->isEditableToStaff() || $isCreate) {
                         $field->render(array('client'=>true, 'in_table'=>true));
                         ?></label><?php
-                       
                         foreach ($field->errors() as $e) { ?>
                             <div class="error" style="clear:both;"><?php echo $e; ?></div>
                         <?php }
