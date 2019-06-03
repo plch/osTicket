@@ -4,7 +4,7 @@ require_once(dirname(__FILE__).'/Net/SMTP.php');
 
 // Send report using SMTP
 // Define host, sender, recipient(s), header and body of the message
-$host = 'email.cincinnatilibrary.org';
+$host = '123.0.0.1';
 $from = 'osTicket <osticket@cincinnatilibrary.org>';
 $rcpt = array('web-team@cincinnatilibrary.org');
 $subj = "From:".$from."\nTo:".implode(",", $rcpt)."\nSubject: LDAP User Info Addon | Cronjob Report\n";

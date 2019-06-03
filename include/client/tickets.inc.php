@@ -137,29 +137,30 @@ $tickets->values(
 );
 
 ?>
+<div class="tickets-wrapper">
 <div class="search well">
 <div class="flush-left">
 <form action="tickets.php" method="get" id="ticketSearchForm">
-    <input type="hidden" name="a"  value="search">
+    <input type="hidden" name="a" value="search">
     <input type="text" name="keywords" size="30" value="<?php echo Format::htmlchars($settings['keywords']); ?>">
-    <input type="submit" value="<?php echo __('Search');?>">
-<div class="pull-right">
-    <?php echo __('Help Topic'); ?>:
-    <select name="topic_id" class="nowarn" onchange="javascript: this.form.submit(); ">
-        <option value="">&mdash; <?php echo __('All Help Topics');?> &mdash;</option>
-<?php
-foreach (Topic::getHelpTopics(true) as $id=>$name) {
-        $count = $thisclient->getNumTopicTickets($id, $org_tickets);
-        if ($count == 0)
-            continue;
-?>
-        <option value="<?php echo $id; ?>"i
-            <?php if ($settings['topic_id'] == $id) echo 'selected="selected"'; ?>
-            ><?php echo sprintf('%s (%d)', Format::htmlchars($name),
-                $thisclient->getNumTopicTickets($id)); ?></option>
-<?php } ?>
-    </select>
-</div>
+    <input type="submit" class="secondary button" value="<?php echo __('Search');?>">
+    <div class="tickets-topic-filter">
+        <?php echo __('Filter'); ?>:&nbsp;&nbsp;
+        <select name="topic_id" class="nowarn" onchange="javascript: this.form.submit(); ">
+            <option value="">&mdash; <?php echo __('All Requests');?> &mdash;</option>
+    <?php
+    foreach (Topic::getHelpTopics(true) as $id=>$name) {
+            $count = $thisclient->getNumTopicTickets($id, $org_tickets);
+            if ($count == 0)
+                continue;
+    ?>
+            <option value="<?php echo $id; ?>"i
+                <?php if ($settings['topic_id'] == $id) echo 'selected="selected"'; ?>
+                ><?php echo sprintf('%s (%d)', Format::htmlchars($name),
+                    $thisclient->getNumTopicTickets($id)); ?></option>
+    <?php } ?>
+        </select>
+    </div>
 </form>
 </div>
 
@@ -200,7 +201,7 @@ if ($closedTickets) {?>
     </small>
 </div>
 </h1>
-<table id="ticketTable" width="800" border="0" cellspacing="0" cellpadding="0">
+<table id="ticketTable" border="0" cellspacing="0" cellpadding="0">
     <caption><?php echo $showing; ?></caption>
     <thead>
         <tr>
@@ -274,3 +275,4 @@ if ($total) {
     echo '<div>&nbsp;'.__('Page').':'.$pageNav->getPageLinks().'&nbsp;</div>';
 }
 ?>
+</div>

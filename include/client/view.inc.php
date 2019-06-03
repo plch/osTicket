@@ -26,8 +26,8 @@ if ($thisclient && $thisclient->isGuest()
     </div>
 
 <?php } ?>
-
-<table width="800" cellpadding="1" cellspacing="0" border="0" id="ticketInfo">
+<div id="ticket-view-wrapper">
+<table cellpadding="1" cellspacing="0" border="0" id="ticketInfo">
     <tr>
         <td colspan="2" width="100%">
             <h1>
@@ -184,13 +184,14 @@ echo $attrs; ?>><?php echo $draft ?: $info['message'];
     </div>
 <?php } ?>
     <p style="text-align:center">
-        <input type="submit" value="<?php echo __('Post Reply');?>">
-        <input type="reset" value="<?php echo __('Reset');?>">
-        <input type="button" value="<?php echo __('Cancel');?>" onClick="history.go(-1)">
+        <input type="submit" class="primary button" value="<?php echo __('Post Reply');?>">
+        <input type="reset" class="secondary button" value="<?php echo __('Reset');?>">
+        <input type="button" class="secondary button" value="<?php echo __('Cancel');?>" onClick="history.go(-1)">
     </p>
 </form>
 <?php
 } ?>
+</div>
 <script type="text/javascript">
 <?php
 // Hover support for all inline images

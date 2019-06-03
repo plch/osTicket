@@ -12,7 +12,7 @@ $BUTTONS = isset($BUTTONS) ? $BUTTONS : true;
                             <a href="open.php" style="display:block" class="primary button"><?php
                                 echo __('Make a New Request');?></a>
                             <div>
-                                Please provide as much detail as possible so we can best assist you. To update a previously submitted ticket, please login.
+                                Please provide as much detail as possible so we can best assist you.
                             </div>
                 </div>
                 <?php } ?>
@@ -34,6 +34,13 @@ $BUTTONS = isset($BUTTONS) ? $BUTTONS : true;
                     </a>
                 </div>
             </div>
-        <?php } ?>
+        <?php } else {
+                ?><div class="landing-page-wrapper"><?php
+                if($cfg && ($page = $cfg->getLandingPage()))
+                    echo $page->getBodyWithImages();
+                else
+                    echo  '<h1>'.__('Welcome to the Support Center').'</h1>';
+                ?></div><?php
+        } ?>
 </div>
 
