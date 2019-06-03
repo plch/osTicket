@@ -18,3 +18,9 @@ stage
 include/mpdf/ttfontdata
 include/mpdf/tmp
 nbproject/
+
+.vscode/
+*.log
+phpinfo.php
+php.ini
+build/

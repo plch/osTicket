@@ -182,14 +182,21 @@ extends SessionBackend {
 
     function read($id) {
         try {
-            $this->data = SessionData::objects()->filter([
-                'session_id' => $id,
-                'session_expire__gt' => SqlFunction::NOW(),
-            ])->one();
+            $this->data = SessionData::objects()
+              ->filter(['session_id' => $id])
+              ->annotate(array('is_expired' =>
+                new SqlExpr(new Q(array('session_expire__lt' => SqlFunction::NOW())))))
+              ->one();
+
+            if ($this->data->is_expired > 0) {
+                // session_expire is in the past. Pretend it is expired and
+                // reset the data. This will assist with CSRF issues
+                $this->data->session_data='';
+            }
             $this->id = $id;
         }
         catch (DoesNotExist $e) {
-            $this->data = new SessionData(['session_id' => $id]);
+            $this->data = new SessionData(['session_id' => $id, 'session_data' => '']);
         }
         catch (OrmException $e) {
             return false;
