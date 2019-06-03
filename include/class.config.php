@@ -30,10 +30,6 @@ class Config {
     # new settings and the corresponding default values.
     var $defaults = array();                # List of default values
 
-
-    # Items
-    var $items = null;
-
     function __construct($section=null, $defaults=array()) {
         if ($section)
             $this->section = $section;
@@ -133,18 +129,11 @@ class Config {
 
     function destroy() {
         unset($this->session);
-        if ($this->items)
-            $this->items->delete();
-
-        return true;
+        return $this->items()->delete() > 0;
     }
 
     function items() {
-
-        if (!isset($this->items))
-            $this->items = ConfigItem::items($this->section, $this->section_column);
-
-        return $this->items;
+        return ConfigItem::items($this->section, $this->section_column);
     }
 }
 
@@ -211,6 +200,8 @@ class OsticketConfig extends Config {
         'agent_name_format' =>  'full', # First Last
         'client_name_format' => 'original', # As entered
         'auto_claim_tickets'=>  true,
+        'collaborator_ticket_visibility' =>  true,
+        'require_topic_to_close' =>  false,
         'system_language' =>    'en_US',
         'default_storage_bk' => 'D',
         'message_autoresponder_collabs' => true,
@@ -780,6 +771,10 @@ class OsticketConfig extends Config {
         return $sequence;
     }
 
+    function showTopLevelTicketCounts() {
+        return ($this->get('queue_bucket_counts'));
+    }
+
     function getDefaultTicketNumberFormat() {
         return $this->get('ticket_number_format');
     }
@@ -937,12 +932,16 @@ class OsticketConfig extends Config {
         return $this->get('auto_claim_tickets');
     }
 
-    function showAssignedTickets() {
-        return ($this->get('show_assigned_tickets'));
+    function collaboratorTicketsVisibility() {
+        return $this->get('collaborator_ticket_visibility');
     }
 
-    function showAnsweredTickets() {
-        return ($this->get('show_answered_tickets'));
+    function requireTopicToClose() {
+        return $this->get('require_topic_to_close');
+    }
+
+    function getDefaultTicketQueueId() {
+        return $this->get('default_ticket_queue');
     }
 
     function hideStaffName() {
@@ -1265,15 +1264,30 @@ class OsticketConfig extends Config {
         if (!preg_match('`(?!<\\\)#`', $vars['ticket_number_format']))
             $errors['ticket_number_format'] = 'Ticket number format requires at least one hash character (#)';
 
+        if (!isset($vars['default_ticket_queue']))
+            $errors['default_ticket_queue'] = __("Select a default ticket queue");
+        elseif (!CustomQueue::lookup($vars['default_ticket_queue']))
+            $errors['default_ticket_queue'] = __("Select a default ticket queue");
+
         $this->updateAutoresponderSettings($vars, $errors);
         $this->updateAlertsSettings($vars, $errors);
 
         if(!Validator::process($f, $vars, $errors) || $errors)
             return false;
 
+        // Sort ticket queues
+        $queues = CustomQueue::queues()->getIterator();
+        foreach ($vars['qsort'] as $queue_id => $sort) {
+            if ($q = $queues->findFirst(array('id' => $queue_id))) {
+                $q->sort = $sort;
+                $q->save();
+            }
+        }
+
         return $this->updateAll(array(
             'ticket_number_format'=>$vars['ticket_number_format'] ?: '######',
             'ticket_sequence_id'=>$vars['ticket_sequence_id'] ?: 0,
+            'queue_bucket_counts'=>isset($vars['queue_bucket_counts'])?1:0,
             'default_priority_id'=>$vars['default_priority_id'],
             'default_help_topic'=>$vars['default_help_topic'],
             'default_ticket_status_id'=>$vars['default_ticket_status_id'],
@@ -1281,11 +1295,12 @@ class OsticketConfig extends Config {
             'max_open_tickets'=>$vars['max_open_tickets'],
             'enable_captcha'=>isset($vars['enable_captcha'])?1:0,
             'auto_claim_tickets'=>isset($vars['auto_claim_tickets'])?1:0,
-            'show_assigned_tickets'=>isset($vars['show_assigned_tickets'])?0:1,
-            'show_answered_tickets'=>isset($vars['show_answered_tickets'])?0:1,
+            'collaborator_ticket_visibility'=>isset($vars['collaborator_ticket_visibility'])?1:0,
+            'require_topic_to_close'=>isset($vars['require_topic_to_close'])?1:0,
             'show_related_tickets'=>isset($vars['show_related_tickets'])?1:0,
             'allow_client_updates'=>isset($vars['allow_client_updates'])?1:0,
             'ticket_lock' => $vars['ticket_lock'],
+            'default_ticket_queue'=>$vars['default_ticket_queue'],
         ));
     }
 

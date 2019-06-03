@@ -33,7 +33,7 @@ if ($_POST) {
     $messageField = $tform->getField('message');
     $attachments = $messageField->getWidget()->getAttachments();
     if (!$errors && $messageField->isAttachmentsEnabled())
-        $vars['cannedattachments'] = $attachments->getClean();
+        $vars['files'] = $attachments->getFiles();
 
     // Drop the draft.. If there are validation errors, the content
     // submitted will be displayed back to the user
@@ -72,6 +72,9 @@ if ($cfg->isClientLoginRequired()) {
 }
 
 require(CLIENTINC_DIR.'header.inc.php');
+?>
+<div class="content-wrapper">
+<?php
 if ($ticket
     && (
         (($topic = $ticket->getTopic()) && ($page = $topic->getPage()))
@@ -82,11 +85,15 @@ if ($ticket
     echo Format::viewableImages(
         $ticket->replaceVars(
             $page->getLocalBody()
-        )
+        ),
+        ['type' => 'P']
     );
 }
 else {
     require(CLIENTINC_DIR.'open.inc.php');
 }
+?>
+</div>
+<?php
 require(CLIENTINC_DIR.'footer.inc.php');
 ?>

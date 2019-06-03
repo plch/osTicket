@@ -77,7 +77,11 @@ if ($settings['status'])
 // unique values
 $visibility = $basic_filter->copy()
     ->values_flat('ticket_id')
-    ->filter(array('user_id' => $thisclient->getId()))
+    ->filter(array('user_id' => $thisclient->getId()));
+
+// Add visibility of Tickets where the User is a Collaborator if enabled
+if ($cfg->collaboratorTicketsVisibility())
+    $visibility = $visibility
     ->union($basic_filter->copy()
         ->values_flat('ticket_id')
         ->filter(array('thread__collaborators__user_id' => $thisclient->getId()))
@@ -129,33 +133,34 @@ $tickets->order_by($order.$order_by);
 $tickets->values(
     'ticket_id', 'number', 'created', 'isanswered', 'source', 'status_id',
     'status__state', 'status__name', 'cdata__subject', 'dept_id',
-    'dept__name', 'dept__ispublic', 'user__default_email__address'
+    'dept__name', 'dept__ispublic', 'user__default_email__address', 'user_id'
 );
 
 ?>
+<div class="tickets-wrapper">
 <div class="search well">
 <div class="flush-left">
 <form action="tickets.php" method="get" id="ticketSearchForm">
-    <input type="hidden" name="a"  value="search">
+    <input type="hidden" name="a" value="search">
     <input type="text" name="keywords" size="30" value="<?php echo Format::htmlchars($settings['keywords']); ?>">
-    <input type="submit" value="<?php echo __('Search');?>">
-<div class="pull-right">
-    <?php echo __('Help Topic'); ?>:
-    <select name="topic_id" class="nowarn" onchange="javascript: this.form.submit(); ">
-        <option value="">&mdash; <?php echo __('All Help Topics');?> &mdash;</option>
-<?php
-foreach (Topic::getHelpTopics(true) as $id=>$name) {
-        $count = $thisclient->getNumTopicTickets($id, $org_tickets);
-        if ($count == 0)
-            continue;
-?>
-        <option value="<?php echo $id; ?>"i
-            <?php if ($settings['topic_id'] == $id) echo 'selected="selected"'; ?>
-            ><?php echo sprintf('%s (%d)', Format::htmlchars($name),
-                $thisclient->getNumTopicTickets($id)); ?></option>
-<?php } ?>
-    </select>
-</div>
+    <input type="submit" class="secondary button" value="<?php echo __('Search');?>">
+    <div class="tickets-topic-filter">
+        <?php echo __('Filter'); ?>:&nbsp;&nbsp;
+        <select name="topic_id" class="nowarn" onchange="javascript: this.form.submit(); ">
+            <option value="">&mdash; <?php echo __('All Requests');?> &mdash;</option>
+    <?php
+    foreach (Topic::getHelpTopics(true) as $id=>$name) {
+            $count = $thisclient->getNumTopicTickets($id, $org_tickets);
+            if ($count == 0)
+                continue;
+    ?>
+            <option value="<?php echo $id; ?>"i
+                <?php if ($settings['topic_id'] == $id) echo 'selected="selected"'; ?>
+                ><?php echo sprintf('%s (%d)', Format::htmlchars($name),
+                    $thisclient->getNumTopicTickets($id)); ?></option>
+    <?php } ?>
+        </select>
+    </div>
 </form>
 </div>
 
@@ -196,7 +201,7 @@ if ($closedTickets) {?>
     </small>
 </div>
 </h1>
-<table id="ticketTable" width="800" border="0" cellspacing="0" cellpadding="0">
+<table id="ticketTable" border="0" cellspacing="0" cellpadding="0">
     <caption><?php echo $showing; ?></caption>
     <thead>
         <tr>
@@ -238,6 +243,7 @@ if ($closedTickets) {?>
                 $subject="<b>$subject</b>";
                 $ticketNumber="<b>$ticketNumber</b>";
             }
+            $thisclient->getId() != $T['user_id'] ? $isCollab = true : $isCollab = false;
             ?>
             <tr id="<?php echo $T['ticket_id']; ?>">
                 <td>
@@ -247,7 +253,11 @@ if ($closedTickets) {?>
                 <td><?php echo Format::date($T['created']); ?></td>
                 <td><?php echo $status; ?></td>
                 <td>
+                  <?php if ($isCollab) {?>
+                    <div style="max-height: 1.2em; max-width: 320px;" class="link truncate" href="tickets.php?id=<?php echo $T['ticket_id']; ?>"><i class="icon-group"></i> <?php echo $subject; ?></div>
+                  <?php } else {?>
                     <div style="max-height: 1.2em; max-width: 320px;" class="link truncate" href="tickets.php?id=<?php echo $T['ticket_id']; ?>"><?php echo $subject; ?></div>
+                    <?php } ?>
                 </td>
                 <td><span class="truncate"><?php echo $dept; ?></span></td>
             </tr>
@@ -265,3 +275,4 @@ if ($total) {
     echo '<div>&nbsp;'.__('Page').':'.$pageNav->getPageLinks().'&nbsp;</div>';
 }
 ?>
+</div>

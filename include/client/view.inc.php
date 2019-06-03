@@ -26,8 +26,8 @@ if ($thisclient && $thisclient->isGuest()
     </div>
 
 <?php } ?>
-
-<table width="800" cellpadding="1" cellspacing="0" border="0" id="ticketInfo">
+<div id="ticket-view-wrapper">
+<table cellpadding="1" cellspacing="0" border="0" id="ticketInfo">
     <tr>
         <td colspan="2" width="100%">
             <h1>
@@ -38,8 +38,9 @@ if ($thisclient && $thisclient->isGuest()
                 </b>
                 <small>#<?php echo $ticket->getNumber(); ?></small>
 <div class="pull-right">
-    <a class="action-button" href="tickets.php?a=print&id=<?php
-        echo $ticket->getId(); ?>"><i class="icon-print"></i> <?php echo __('Print'); ?></a>
+      <a class="action-button" href="tickets.php?a=print&id=<?php
+          echo $ticket->getId(); ?>"><i class="icon-print"></i> <?php echo __('Print'); ?></a>
+
 <?php if ($ticket->hasClientEditableFields()
         // Only ticket owners can edit the ticket details (and other forms)
         && $thisclient->getId() == $ticket->getUserId()) { ?>
@@ -136,13 +137,15 @@ echo $v;
 </tr>
 </table>
 <br>
+  <?php
+    $email = $thisclient->getUserName();
+    $clientId = TicketUser::lookupByEmail($email)->getId();
 
-<?php
-    $ticket->getThread()->render(array('M', 'R'), array(
-                'mode' => Thread::MODE_CLIENT,
-                'html-id' => 'ticketThread')
-            );
-?>
+    $ticket->getThread()->render(array('M', 'R', 'user_id' => $clientId), array(
+                    'mode' => Thread::MODE_CLIENT,
+                    'html-id' => 'ticketThread')
+                );
+  ?>
 
 <div class="clear" style="padding-bottom:10px;"></div>
 <?php if($errors['err']) { ?>
@@ -176,19 +179,21 @@ echo $attrs; ?>><?php echo $draft ?: $info['message'];
         print $attachments->render(array('client'=>true));
     } ?>
     </div>
-<?php if ($ticket->isClosed()) { ?>
+<?php
+  if ($ticket->isClosed() && $ticket->isReopenable()) { ?>
     <div class="warning-banner">
         <?php echo __('Ticket will be reopened on message post'); ?>
     </div>
 <?php } ?>
     <p style="text-align:center">
-        <input type="submit" value="<?php echo __('Post Reply');?>">
-        <input type="reset" value="<?php echo __('Reset');?>">
-        <input type="button" value="<?php echo __('Cancel');?>" onClick="history.go(-1)">
+        <input type="submit" class="primary button" value="<?php echo __('Post Reply');?>">
+        <input type="reset" class="secondary button" value="<?php echo __('Reset');?>">
+        <input type="button" class="secondary button" value="<?php echo __('Cancel');?>" onClick="history.go(-1)">
     </p>
 </form>
 <?php
 } ?>
+</div>
 <script type="text/javascript">
 <?php
 // Hover support for all inline images
@@ -198,7 +203,7 @@ foreach (AttachmentFile::objects()->filter(array(
     'attachments__inline' => true,
 )) as $file) {
     $urls[strtolower($file->getKey())] = array(
-        'download_url' => $file->getDownloadUrl(),
+        'download_url' => $file->getDownloadUrl(['type' => 'H']),
         'filename' => $file->name,
     );
 } ?>

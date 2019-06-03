@@ -74,7 +74,7 @@ class FAQ extends VerySimpleModel {
     function getQuestion() { return $this->question; }
     function getAnswer() { return $this->answer; }
     function getAnswerWithImages() {
-        return Format::viewableImages($this->answer);
+        return Format::viewableImages($this->answer, ['type' => 'F']);
     }
     function getTeaser() {
         return Format::truncate(Format::striptags($this->answer), 150);
@@ -194,7 +194,8 @@ class FAQ extends VerySimpleModel {
         return $this->_getLocal('answer', $lang);
     }
     function getLocalAnswerWithImages($lang=false) {
-        return Format::viewableImages($this->getLocalAnswer($lang));
+        return Format::viewableImages($this->getLocalAnswer($lang),
+                ['type' => 'F']);
     }
     function _getLocal($what, $lang=false) {
         if (!$lang) {
@@ -404,7 +405,7 @@ class FAQ extends VerySimpleModel {
         }
 
         $images = Draft::getAttachmentIds($vars['answer']);
-        $images = array_map(function($i) { return $i['id']; }, $images);
+        $images = array_flip(array_map(function($i) { return $i['id']; }, $images));
         $this->getAttachments()->keepOnlyFileIds($images, true);
 
         // Handle language-specific attachments
