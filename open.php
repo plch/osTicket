@@ -72,6 +72,9 @@ if ($cfg->isClientLoginRequired()) {
 }
 
 require(CLIENTINC_DIR.'header.inc.php');
+?>
+<div class="content-wrapper">
+<?php
 if ($ticket
     && (
         (($topic = $ticket->getTopic()) && ($page = $topic->getPage()))
@@ -89,5 +92,8 @@ if ($ticket
 else {
     require(CLIENTINC_DIR.'open.inc.php');
 }
+?>
+</div>
+<?php
 require(CLIENTINC_DIR.'footer.inc.php');
 ?>

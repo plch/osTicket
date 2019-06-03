@@ -6,7 +6,7 @@ if (!$form->hasAnyVisibleFields($thisclient))
 
 $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
 ?>
-    <tr><td colspan="2"><hr />
+    <tr class="form-header-row"><td colspan="2">
     <div class="form-header" style="margin-bottom:0.5em">
     <h3><?php echo Format::htmlchars($form->getTitle()); ?></h3>
     <div><?php echo Format::display($form->getInstructions()); ?></div>
