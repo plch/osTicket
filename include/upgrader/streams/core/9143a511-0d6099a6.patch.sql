@@ -6,14 +6,21 @@
  */
 
 ALTER TABLE `%TABLE_PREFIX%ticket_event`
-  ADD `id` int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
-  CHANGE `ticket_id` `thread_id` int(11) unsigned NOT NULL default '0',
-  CHANGE `staff` `username` varchar(128) NOT NULL default 'SYSTEM',
-  CHANGE `state` `state` enum('created','closed','reopened','assigned','transferred','overdue','edited','viewed','error','collab','resent') NOT NULL,
-  ADD `data` varchar(1024) DEFAULT NULL COMMENT 'Encoded differences' AFTER `state`,
-  ADD `uid` int(11) unsigned DEFAULT NULL AFTER `username`,
-  ADD `uid_type` char(1) NOT NULL DEFAULT 'S' AFTER `uid`,
-  RENAME TO `%TABLE_PREFIX%thread_event`;
+  ADD `id` int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST;
+ALTER TABLE `%TABLE_PREFIX%ticket_event`
+  CHANGE `ticket_id` `thread_id` int(11) unsigned NOT NULL default '0';
+ALTER TABLE `%TABLE_PREFIX%ticket_event` 
+  CHANGE `staff` `username` varchar(128) NOT NULL default 'SYSTEM';
+ALTER TABLE `%TABLE_PREFIX%ticket_event`
+  CHANGE `state` `state` enum('created','closed','reopened','assigned','transferred','overdue','edited','viewed','error','collab','resent') NOT NULL;
+ALTER TABLE `%TABLE_PREFIX%ticket_event`
+  ADD `data` varchar(1024) DEFAULT NULL COMMENT 'Encoded differences' AFTER `state`;
+ALTER TABLE `%TABLE_PREFIX%ticket_event`
+  ADD `uid` int(11) unsigned DEFAULT NULL AFTER `username`;
+ALTER TABLE `%TABLE_PREFIX%ticket_event`
+  ADD `uid_type` char(1) NOT NULL DEFAULT 'S' AFTER `uid`;
+
+ALTER TABLE `%TABLE_PREFIX%ticket_event` RENAME TO `%TABLE_PREFIX%thread_event`;
 
 -- Change the `ticket_id` column to the values in `%thread`.`id`
 CREATE TABLE `%TABLE_PREFIX%_ticket_thread_evt`
