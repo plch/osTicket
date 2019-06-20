@@ -15,12 +15,13 @@ Prod: `C:\osticket\> phing prod`
 
 Initial Production Deploy Steps:
 
-~~1. Install the base OsTicket v1.11 ~~
+1. ~~Install the base OsTicket v1.11~~
 
-2. Install the LDAP and HTTP passthrough plug-ins as instructed.
+2. ~~Install the LDAP and HTTP passthrough plug-ins as instructed.~~
 
 3. Import CS Data:
-The easiest way to import the CS data is to copy the database over and use OSTicket's builtin upgrader, so this should be done before we proceed with other changes. If we need to import data after making data changes to prod, the easiest way to do the import will be to copy the database to a third temporary site, do the upgrade to v1.11 there, then export the data from that temp database to import to the prod site
+
+  * The easiest way to import the CS data is to copy the database over and use OSTicket's builtin upgrader, so this should be done before we proceed with other changes. If we need to import data after making data changes to prod, the easiest way to do the import will be to copy the database to a third temporary site, do the upgrade to v1.11 there, then export the data from that temp database to import to the prod site
 
     1. Export the existing database to SQL:
         a. Select drop and create for both database and tables
@@ -37,7 +38,7 @@ The easiest way to import the CS data is to copy the database over and use OSTic
 
 5. Import PPGS Data
 
-The PPGS data relies on some of the changes we've made to the code. To import use the PPGSMigrator application. Found on TFS in $/PLCH/Utilities/Plch.Migrations.OsTicket. The release build will import the data into the prod DB. Tickets imported from PPGS will have a ticket number prepended with an 'I'. This is to prevent collisions with existing CS data.
+  * The PPGS data relies on some of the changes we've made to the code. To import use the PPGSMigrator application. Found on TFS in $/PLCH/Utilities/Plch.Migrations.OsTicket. The release build will import the data into the prod DB. Tickets imported from PPGS will have a ticket number prepended with an 'I'. This is to prevent collisions with existing CS data.
 
 
 
