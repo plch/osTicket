@@ -100,7 +100,7 @@ if ($info['topicId'] && ($topic=Topic::lookup($info['topicId']))) {
     </tr>
     <?php
     } ?>
-    <tr><td colspan=2>&nbsp;</td></tr>
+    <tr><td colspan="<?php echo MAX_FORM_DISPLAY_COLUMNS ?>">&nbsp;</td></tr>
     </tbody>
   </table>
   <p class="buttons" style="text-align:center;">

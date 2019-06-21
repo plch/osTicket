@@ -1688,7 +1688,7 @@ class SelectionField extends FormField {
     }
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'multiselect' => new BooleanField(array(
                 'id'=>2,
                 'label'=>__(/* Type of widget allowing multiple selections */ 'Multiselect'),
@@ -1742,8 +1742,10 @@ class SelectionField extends FormField {
                 'id'=>4, 'label'=>__('Default'), 'required'=>false, 'default'=>'',
                 'list_id'=>$this->getListId(),
                 'configuration' => array('prompt'=>__('Select a Default')),
-            )),
+            ))
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function getConfiguration() {

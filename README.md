@@ -10,7 +10,9 @@ Development Setup:
     (Remember that you will need to restart open programs to access these new environment variables)
 
 To deploy:
+
 Beta: `C:\osticket\> phing beta`
+
 Prod: `C:\osticket\> phing prod`
 
 Initial Production Deploy Steps:
@@ -22,12 +24,15 @@ Initial Production Deploy Steps:
 3. Import CS Data:
 
   * The easiest way to import the CS data is to copy the database over and use OSTicket's builtin upgrader, so this should be done before we proceed with other changes. If we need to import data after making other changes to prod, there is an extra step to ensure that the imported data matches the current table layout.
+
     1. Exporting the Existing CS Data:
         1. Log on to the plchosticket server
         2. Using HeidiSQL connect to the MySQL DB on local host using the osticket user (password is in Keepass)
         3. Right click on the osticket database and select Export to SQL:
-            a. Select drop and create for both database and tables
-            b. Select to insert data
+
+            1. Select drop and create for both database and tables
+
+            2. Select to insert data
 
     2. Importing CS Data on a clean install
         1. Back up the existing OSTicket DB on webutility (use same instructions as exporting existing CS data)
@@ -55,7 +60,8 @@ Initial Production Deploy Steps:
 
   * The PPGS data relies on some of the changes we've made to the code. To import use the PPGSMigrator application found on TFS in $/PLCH/Utilities/Plch.Migrations.OsTicket. The release build will import the data into the prod DB. Tickets imported from PPGS will have a ticket number prepended with an 'I'. This is to prevent collisions with existing CS data. The import from PPGS is slow, you should budget a week to load it all, if all of the data from PPGS needs to be imported.
 
-6. Create a scheduled task to run the AD sync script ldap_user_info/update_user_info.php
+6. Create a scheduled task to run the AD sync script ldap_user_info/update_user_info.php. Settings for this script, including MySQL username / pw and AD username / pw are in the ldap_user_info/config.php
+    file. You will need to ensure these are set correctly for production.
 
 
 

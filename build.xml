@@ -1,6 +1,9 @@
 <project name="OSTicket" default="build">
+    <property environment="env" />
     <property name="builddir" value="./build" override="true" />
-    <property name="betadir" value="V:/inetpub/wwwroot/osticket/" override="true" />
+    <property name="proddir" refid="env.OsTicketProdDir" />
+    <property name="betadir" refid="env.OsTicketBetaDir" />
+    <property name="devdir" refid="env.OsTicketDevDir" />
 
     <fileset dir="." id="sitefiles">
         <include name="**" />
@@ -18,28 +21,121 @@
         <exclude name="web.config" />
         <exclude name="include/ost-config.php" />
         <exclude name="ldap_user_info/config.php" />
+        <exclude name="include/ost-config.php.dist" />
+        <exclude name="ldap_user_info/config.php.dist" />
         <exclude name="build.xml" />
     </fileset>
+
+    <target name="dev_config">
+        <property name="MySQLHost" refid="env.OsTicketMySQLDevHost" />
+        <property name="MySQLDatabase" refid="env.OsTicketMySQLDevDatabase" />
+        <property name="MySQLUsername" refid="env.OsTicketMySQLDevUsername" />
+        <property name="MySQLPassword" refid="env.OsTicketMySQLDevPassword" />
+        <property name="ActiveDirectoryHost" refid="env.OsTicketActiveDirectoryDevHost" />
+        <property name="ActiveDirectoryPort" refid="env.OsTicketActiveDirectoryDevPort" />
+        <property name="ActiveDirectoryBaseDN" refid="env.OsTicketActiveDirectoryDevBaseDN" />
+        <property name="ActiveDirectoryReaderUsername" refid="env.OsTicketActiveDirectoryReaderDevUsername" />
+        <property name="ActiveDirectoryReaderPassword" refid="env.OsTicketActiveDirectoryReaderDevPassword" />
+        <property name="SecretSalt" refid="env.OsTicketDevSecretSalt" />
+        <property name="AdminEmail" refid="env.OsTicketDevAdminEmail" /> 
+    </target>
+
+    <target name="beta_config">
+        <property name="MySQLHost" refid="env.OsTicketMySQLBetaHost" />
+        <property name="MySQLDatabase" refid="env.OsTicketMySQLBetaDatabase" />
+        <property name="MySQLUsername" refid="env.OsTicketMySQLBetaUsername" />
+        <property name="MySQLPassword" refid="env.OsTicketMySQLBetaPassword" />
+        <property name="ActiveDirectoryHost" refid="env.OsTicketActiveDirectoryBetaHost" />
+        <property name="ActiveDirectoryPort" refid="env.OsTicketActiveDirectoryBetaPort" />
+        <property name="ActiveDirectoryBaseDN" refid="env.OsTicketActiveDirectoryBetaBaseDN" />
+        <property name="ActiveDirectoryReaderUsername" refid="env.OsTicketActiveDirectoryReaderBetaUsername" />
+        <property name="ActiveDirectoryReaderPassword" refid="env.OsTicketActiveDirectoryReaderBetaPassword" />
+        <property name="SecretSalt" refid="env.OsTicketBetaSecretSalt" />
+        <property name="AdminEmail" refid="env.OsTicketBetaAdminEmail" /> 
+    </target>
+
+    <target name="prod_config">
+        <property name="MySQLHost" refid="env.OsTicketMySQLProdHost" />
+        <property name="MySQLDatabase" refid="env.OsTicketMySQLProdDatabase" />
+        <property name="MySQLUsername" refid="env.OsTicketMySQLProdUsername" />
+        <property name="MySQLPassword" refid="env.OsTicketMySQLProdPassword" />
+        <property name="ActiveDirectoryHost" refid="env.OsTicketActiveDirectoryProdHost" />
+        <property name="ActiveDirectoryPort" refid="env.OsTicketActiveDirectoryProdPort" />
+        <property name="ActiveDirectoryBaseDN" refid="env.OsTicketActiveDirectoryProdBaseDN" />
+        <property name="ActiveDirectoryReaderUsername" refid="env.OsTicketActiveDirectoryReaderProdUsername" />
+        <property name="ActiveDirectoryReaderPassword" refid="env.OsTicketActiveDirectoryReaderProdPassword" />
+        <property name="SecretSalt" refid="env.OsTicketProdSecretSalt" />
+        <property name="AdminEmail" refid="env.OsTicketProdAdminEmail" /> 
+    </target>
 
     <target name="clean">
         <delete dir="${builddir}" />
         <mkdir dir="${builddir}" />
     </target> 
 
-    <target name="build" depends="clean">
+    <target if="MySQLHost" name="build" depends="clean">
         <copy todir="${builddir}">
             <fileset refid="sitefiles" />
         </copy>
+        <copy file="include/ost-config.php.dist" tofile="${builddir}/include/ost-config.php">
+            <filterchain>
+                <replacetokens begintoken="%%" endtoken="%%">
+                    <token key="MySQLHost" value="${MySQLHost}" />
+                    <token key="MySQLDatabase" value="${MySQLDatabase}" />
+                    <token key="MySQLUsername" value="${MySQLUsername}" />
+                    <token key="MySQLPassword" value="${MySQLPassword}" />
+                    <token key="ActiveDirectoryHost" value="${ActiveDirectoryHost}" />
+                    <token key="ActiveDirectoryPort" value="${ActiveDirectoryPort}" />
+                    <token key="ActiveDirectoryBaseDN" value="${ActiveDirectoryBaseDN}" />
+                    <token key="ActiveDirectoryReaderUsername" value="${ActiveDirectoryReaderUsername}" />
+                    <token key="ActiveDirectoryReaderPassword" value="${ActiveDirectoryReaderPassword}" />
+                    <token key="SecretSalt" value="${SecretSalt}" />
+                    <token key="AdminEmail" value="${AdminEmail}" />
+                </replacetokens>
+            </filterchain>
+        </copy>
+        <copy file="ldap_user_info/config.php.dist" tofile="${builddir}/ldap_user_info/config.php">
+            <filterchain>
+                <replacetokens begintoken="%%" endtoken="%%">
+                    <token key="MySQLHost" value="${MySQLHost}" />
+                    <token key="MySQLDatabase" value="${MySQLDatabase}" />
+                    <token key="MySQLUsername" value="${MySQLUsername}" />
+                    <token key="MySQLPassword" value="${MySQLPassword}" />
+                    <token key="ActiveDirectoryHost" value="${ActiveDirectoryHost}" />
+                    <token key="ActiveDirectoryPort" value="${ActiveDirectoryPort}" />
+                    <token key="ActiveDirectoryBaseDN" value="${ActiveDirectoryBaseDN}" />
+                    <token key="ActiveDirectoryReaderUsername" value="${ActiveDirectoryReaderUsername}" />
+                    <token key="ActiveDirectoryReaderPassword" value="${ActiveDirectoryReaderPassword}" />
+                    <token key="SecretSalt" value="${SecretSalt}" />
+                    <token key="AdminEmail" value="${AdminEmail}" />
+                </replacetokens>
+            </filterchain>
+        </copy>
     </target> 
 
-     <fileset dir="${builddir}" id="buildfiles">
+    <fileset dir="${builddir}" id="buildfiles">
         <include name="**" />
-    </fileset>   
+    </fileset> 
 
-    <target name="beta" depends="build">
+    <target name="dev" depends="dev_config,build">
+        <copy todir="${devdir}" includeemptydirs="true" >
+            <fileset refid="buildfiles" />
+        </copy>
+    </target>   
+
+    <target name="beta" depends="beta_config,build">
         <copy todir="${betadir}" includeemptydirs="true" >
             <fileset refid="buildfiles" />
         </copy>
     </target> 
+
+    <target name="prod" depends="prod_config,build">
+        <copy todir="${proddir}" includeemptydirs="true" >
+            <fileset refid="buildfiles" />
+        </copy>
+    </target>
+
+    <target name="testbuild" depends="beta_config,build">
+    </target>
        
 </project>
