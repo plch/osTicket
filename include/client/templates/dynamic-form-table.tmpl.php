@@ -14,12 +14,13 @@ if (empty($formData)) {
 ?>
 <div class="table-form-container">
     <div class="form-header" style="margin-bottom:0.5em">
-    <div><?php echo Format::display($form->getInstructions()); ?></div>
+        <div><?php echo Format::display($form->getInstructions()); ?></div>
     </div>
     <table class="table-form">
         <thead>
         <tr>
         <?php
+
         foreach ($form->getFields() as $field) {
         try {
             if (!$field->isEnabled())
@@ -37,34 +38,32 @@ if (empty($formData)) {
         }
         ?>
             <td>
-            <?php if (!$field->isBlockLevel()) { ?>
-                <label for="<?php echo $field->getFormName(); ?>"><span class="<?php
-                    if ($field->isRequiredForUsers()) echo 'required'; ?>">
-                <?php echo Format::htmlchars($field->getLocal('label')); ?>
-            <?php if ($field->isRequiredForUsers() &&
-                    ($field->isEditableToUsers() || $isCreate)) { ?>
-                <span class="error">*</span>
-            <?php }
-            ?></span><?php
-                if ($field->get('hint')) { ?>
-                    <br /><em style="color:gray;display:inline-block"><?php
-                        echo Format::viewableImages($field->getLocal('hint')); ?></em>
+                <?php if (!$field->isBlockLevel()) { ?>
+                    <label for="<?php echo $field->getFormName(); ?>"><span class="<?php
+                        if ($field->isRequiredForUsers()) echo 'required'; ?>">
+                    <?php echo Format::htmlchars($field->getLocal('label')); ?>
+                <?php if ($field->isRequiredForUsers() &&
+                        ($field->isEditableToUsers() || $isCreate)) { ?>
+                    <span class="error">*</span>
+                <?php }
+                ?></span><?php
+                    if ($field->get('hint')) { ?>
+                        <br /><em style="color:gray;display:inline-block"><?php
+                            echo Format::viewableImages($field->getLocal('hint')); ?></em>
+                    <?php
+                    } ?>
+                <br/>
                 <?php
                 } ?>
-            <br/>
-            <?php
-            } ?>
             </td>
-        <?php
-    } ?>
+        <?php } ?>
         <td></td>
         </tr>
         </thead>
         <tbody>
-    <?php
+        <?php
         foreach ($formData as $rowIndex => $row) {
             ?> <tr> <?php
-            $fieldIndex = 0;
             foreach ($form->getFields() as $field) {
                 try {
                     if (!$field->isEnabled())
@@ -98,35 +97,35 @@ if (empty($formData)) {
                 ?>
                     <td>
                     <?php if ($field->isEditableToUsers() || $isCreate) {
-                        $field->render(array('client'=>true, 'in_table'=>true));
-                        ?></label><?php
- 
-                        foreach ($field->errors() as $e) { ?>
-                            <div class="error" style="clear: both;"><?php echo $e; ?></div>
-                        <?php }
-                        $field->renderExtras(array('client'=>true));
-                        } else {
-                        $val = '';
-                        if ($field->value)
-                            $val = $field->display($field->value);
-                        elseif (($a=$field->getAnswer()))
-                            $val = $a->display();
+                            $field->render(array('client'=>true, 'in_table'=>true));
+                            ?></label><?php
 
-                        echo sprintf('%s </label>', $val);
+                            foreach ($field->errors() as $e) { ?>
+                                <div class="error" style="clear: both;"><?php echo $e; ?></div>
+                            <?php }
+                            $field->renderExtras(array('client'=>true));
+                        } else {
+                            $val = '';
+                            if ($field->value)
+                                $val = $field->display($field->value);
+                            elseif (($a=$field->getAnswer()))
+                                $val = $a->display();
+
+                            echo sprintf('%s </label>', $val);
                     } ?>
                     </td>
                 <?php
                 $fieldIndex++;
             } 
             ?>
-        <td><button type="button" class="remove-form-row secondary button small" name="DeleteRow"><i class="icon-trash"></i></button></td>
-        </tr><?php
-        }?>
-         </tbody>
-    <table>
+            <td><button type="button" class="remove-form-row secondary button small" name="DeleteRow"><i class="icon-trash"></i></button></td>
+        </tr>
+        <?php } ?>
+        </tbody>
+    </table>
     <button type="button" class="add-form-row secondary button small" name="AddRow"><i class="icon-plus"></i>&nbsp;&nbsp;Add Item</button>
-    <script type="template/html" class="row-template">
-    <tr>
+    <script class="row-template">
+        <tr>
         <?php
             foreach ($form->getFields() as $field) {
                 try {
@@ -150,20 +149,19 @@ if (empty($formData)) {
                 ?>
                     <td>
                     <?php if ($field->isEditableToUsers() || $isCreate) {
-                        $field->render(array('client'=>true, 'in_table'=>true));
-                        ?></label><?php
-                        foreach ($field->errors() as $e) { ?>
-                            <div class="error" style="clear:both;"><?php echo $e; ?></div>
-                        <?php }
-                        $field->renderExtras(array('client'=>true));
-                        } else {
+                            $field->render(array('client'=>true, 'in_table'=>true));
+                            ?></label><?php
+                            foreach ($field->errors() as $e) { ?>
+                                <div class="error" style="clear:both;"><?php echo $e; ?></div>
+                            <?php }
+                            } else {
                         $val = '';
-                        if ($field->value)
-                            $val = $field->display($field->value);
-                        elseif (($a=$field->getAnswer()))
-                            $val = $a->display();
+                            if ($field->value)
+                                $val = $field->display($field->value);
+                            elseif (($a=$field->getAnswer()))
+                                $val = $a->display();
 
-                        echo sprintf('%s </label>', $val);
+                            echo sprintf('%s </label>', $val);
                     } ?>
                     </td>
                 <?php

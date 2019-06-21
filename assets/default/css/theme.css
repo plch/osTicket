@@ -601,7 +601,7 @@ label.required, span.required {
     table-layout: fixed;
 }
 #ticketForm > table td {
-    width: 160px;
+    width: 300px;
 }
 #ticketForm > table td + td {
     width: auto;
@@ -1261,6 +1261,7 @@ img.avatar {
 }
 #ticketForm table.table-form {
   width: 100%;
+  margin-bottom: 10px;
 }
 #ticketForm table.table-form td {
   width: auto;
@@ -1290,24 +1291,29 @@ select[disabled] {
   align-items: center;
   justify-content: space-around;
 }
-.primary.button {
+.primary.button, #ticketForm .primary.button {
+  display: inline-block;
+  margin: 0 5px;
+  
   background-color:transparent;
   border: 2px solid rgb(196,0,46);
-  font-weight: bold;
   color: rgb(196,0,46);
-  margin: 0 5px;
-}
 
+  font-weight: bold;
+}
 .primary.button:hover {
   background-color: rgb(196,0,46);
   color: white;
 }
-.secondary.button {
+.secondary.button, #ticketForm .secondary.button {
+  display: inline-block;
+  margin: 0 5px;
+
   background-color:transparent;
   border: 2px solid rgb(51,51,51);
-  font-weight: bold;
   color:rgb(51,51,51);
-  margin: 0 5px;
+
+  font-weight: bold;
 }
 .secondary.button.small {
   font-size: 10px;
@@ -1408,4 +1414,17 @@ tr + tr.form-header-row td {
 #ticketSearchForm {
   overflow: visible;
   position: relative;
+}
+#ticketForm .table-form td {
+  padding: 0 5px;
+}
+.table-form input[type='checkbox'] {
+  margin: auto;
+}
+#ticketForm .table-form td input[type='text'] {
+  width: 90%;
+}
+#ticketForm .table-form thead td {
+  text-align: center;
+  padding-bottom: 10px;
 }

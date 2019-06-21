@@ -67,6 +67,7 @@ interface CustomListItem {
     function getValue();
     function getAbbrev();
     function getSortOrder();
+    function getVar($name);
 
     function getList();
     function getListId();
@@ -1330,6 +1331,15 @@ implements CustomListItem, TemplateVariable, Searchable {
         }
 
         return $this->_form;
+    }
+
+    function getVar($name) {
+        $config = $this->getConfiguration();
+        $name = mb_strtolower($name);
+        foreach ($this->getConfigurationForm()->getFields() as $field) {
+            if (mb_strtolower($field->get('name')) == $name)
+                return $field->asVar($config[$field->get('id')]);
+        }
     }
 
     function getFields() {

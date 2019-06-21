@@ -6,7 +6,7 @@ if (!$form->hasAnyVisibleFields($thisclient))
 
 $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
 ?>
-    <tr class="form-header-row"><td colspan="2">
+    <tr class="form-header-row"><td colspan="<?php echo MAX_FORM_DISPLAY_COLUMNS ?>">
     <div class="form-header" style="margin-bottom:0.5em">
     <h3><?php echo Format::htmlchars($form->getTitle()); ?></h3>
     <div><?php echo Format::display($form->getInstructions()); ?></div>
@@ -15,6 +15,10 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
     <?php
     // Form fields, each with corresponding errors follows. Fields marked
     // 'private' are not included in the output for clients
+    $columnsInCurrentRow = 0;
+    $maxColumns = MAX_FORM_DISPLAY_COLUMNS;
+    $startNewRow = true;
+
     foreach ($form->getFields() as $field) {
         try {
             if (!$field->isEnabled())
@@ -30,9 +34,19 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
         } elseif (!$field->isVisibleToUsers()) {
             continue;
         }
-        ?>
+
+        $columnsToUse = $field->getDisplayColumns();
+
+        if ($columnsToUse > $maxColumns)
+            $columnsToUse = $maxColumns;
+
+        if ($startNewRow || $columnsInCurrentRow + $columnsToUse > $maxColumns)
+        { ?>
         <tr>
-            <td colspan="2" style="padding-top:10px;">
+        <?php
+            $startNewRow = false; 
+        } ?>
+            <td colspan="<?php echo $columnsToUse ?>" style="padding-top:10px;">
             <?php if (!$field->isBlockLevel()) { ?>
                 <label for="<?php echo $field->getFormName(); ?>"><span class="<?php
                     if ($field->isRequiredForUsers()) echo 'required'; ?>">
@@ -40,7 +54,12 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
             <?php if ($field->isRequiredForUsers() &&
                     ($field->isEditableToUsers() || $isCreate)) { ?>
                 <span class="error">*</span>
-            <?php }
+            <?php 
+            }
+            if (!$field->isRequiredForUsers() && $field->isRequiredSometimes() 
+                       && ($field->isEditableToUsers() || $isCreate)) { ?>
+                    <span class="error" style="display:none;">*</span>
+                <?php }
             ?></span><?php
                 if ($field->get('hint')) { ?>
                     <br /><em style="color:gray;display:inline-block"><?php
@@ -70,7 +89,13 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
             }
             ?>
             </td>
+        <?php if ($columnsInCurrentRow + $columnsToUse >= $maxColumns) { ?>
         </tr>
         <?php
+            $columnsInCurrentRow = 0;
+            $startNewRow = true;
+        } else {
+            $columnsInCurrentRow += $columnsToUse;
+        }   
     }
 ?>

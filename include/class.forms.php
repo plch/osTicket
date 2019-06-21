@@ -575,6 +575,7 @@ class FormField {
             'thread' => array(  /* @trans */ 'Thread Entry', 'ThreadEntryField', false),
             'datetime' => array(/* @trans */ 'Date and Time', 'DatetimeField'),
             'timezone' => array(/* @trans */ 'Timezone', 'TimezoneField'),
+            'time' => array(    /* @trans */ 'Time', 'TimeField'),
             'phone' => array(   /* @trans */ 'Phone Number', 'PhoneField'),
             'bool' => array(    /* @trans */ 'Checkbox', 'BooleanField'),
             'choices' => array( /* @trans */ 'Choices', 'ChoiceField'),
@@ -881,6 +882,31 @@ class FormField {
      */
     function display($value) {
         return Format::htmlchars($this->toString($value ?: $this->value));
+    }
+
+    /**
+     * Return the number of columns that the field should use up when displayed in a table
+     * Defaults to 2, max 2 currently
+     */
+    function getDisplayColumns() {
+        $config = $this->getConfiguration();
+
+        if ($config["display_columns"]) {
+            return $config["display_columns"];
+        }
+
+        return MAX_FORM_DISPLAY_COLUMNS;
+    }
+
+    static function getDisplayColumnChoices() {
+        $maxColumns = MAX_FORM_DISPLAY_COLUMNS;
+        $choices = array();
+
+        for ($i = 1; $i <= $maxColumns; $i++) {
+            $choices[$i] = '' . $i;
+        }
+
+        return $choices;
     }
 
     /**
@@ -1217,6 +1243,15 @@ class FormField {
         return array();
     }
 
+    static function getDisplayConfigurationOptions() {
+        return array('display_columns' => new ChoiceField(array(
+                'id'=>99, 'label'=>__('Display Columns (Width)'), 'required'=>false,
+                'hint'=>__('Defaults to the max'),
+                'choices' => FormField::getDisplayColumnChoices()
+            ))
+        );
+    }
+
     /**
      * getConfiguration
      *
@@ -1406,12 +1441,22 @@ class FormField {
     static function init($config) {
         return new Static($config);
     }
-}
 
-class TextboxField extends FormField {
-    static $widget = 'TextboxWidget';
+    /********************************
+     * Indicates if the field has a configuration option  that can make it be
+     * required sometimes and not others
+     */
+    function isRequiredSometimes() {
+        $config = $this->getConfiguration();
 
-    function getFieldChoices() {
+        if (isset($config['validator']) && $config['validator'] === 'required_when') {
+            return true;
+        }
+
+        return false;
+    }
+
+    function getBooleanFieldsAsChoices() {
         $form = $this->get('form');
 
         if ($form) {
@@ -1423,7 +1468,7 @@ class TextboxField extends FormField {
                 if (!$field instanceof BooleanField) continue;
                 if ($field->getId() == $this->getId()) continue;
 
-                $fieldChoices[$field->getId()] = $field->getLabel();
+                $fieldChoices[$field->get('name')] = $field->get('name');
             }
 
             return $fieldChoices;
@@ -1432,8 +1477,17 @@ class TextboxField extends FormField {
         }
     }
 
+    function getRequiredWhenField() {
+        $config = $this->getConfiguration();
+        return $this->getForm()->getField($config['required_when']);
+    }
+}
+
+class TextboxField extends FormField {
+    static $widget = 'TextboxWidget';
+
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'size'  =>  new TextboxField(array(
                 'id'=>1, 'label'=>__('Size'), 'required'=>false, 'default'=>16,
                     'validator' => 'number')),
@@ -1472,7 +1526,7 @@ class TextboxField extends FormField {
                     'visibility' => new VisibilityConstraint(
                         new Q(array('validator__eq'=>'required_when')),
                         VisibilityConstraint::HIDDEN
-                    ), 'choices' => $this->getFieldChoices())),
+                    ), 'choices' => $this->getBooleanFieldsAsChoices())),
             'validator-error' => new TextboxField(array(
                 'id'=>4, 'label'=>__('Validation Error'), 'default'=>'',
                 'configuration'=>array('size'=>40, 'length'=>60,
@@ -1487,6 +1541,8 @@ class TextboxField extends FormField {
                 ),
             )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function validateEntry($value) {
@@ -1507,6 +1563,25 @@ class TextboxField extends FormField {
                     return @preg_match($regex, $v);
                 }, __('Value does not match required pattern')
             ),
+            'required_when' => array(function($v) use ($config) {
+                    $required_when_field = $this->getRequiredWhenField();
+                    $requiredid = (string)$required_when_field->getId();
+                    $data = $this->getSource();
+                    $isrequired = false;
+
+                    foreach ($data['_field-checkboxes'] as $checkbox) {
+                        if ($checkbox == $requiredid) {
+                            $isrequired = true;
+                        }
+                    }
+
+                    if ($isrequired) {
+                        return isset($v);
+                    }
+
+                    return true;
+                }, __('Enter a value')
+            )
         );
         // Support configuration forms, as well as GUI-based form fields
         $valid = $this->get('validator');
@@ -1551,13 +1626,17 @@ class PasswordField extends TextboxField {
     function to_php($value) {
         return Crypto::decrypt($value, SECRET_SALT, 'pwfield');
     }
+
+    function getConfigurationOptions() {
+        return FormField::getDisplayConfigurationOptions();
+    }
 }
 
 class TextareaField extends FormField {
     static $widget = 'TextareaWidget';
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'cols'  =>  new TextboxField(array(
                 'id'=>1, 'label'=>__('Width').' '.__('(chars)'), 'required'=>true, 'default'=>40)),
             'rows'  =>  new TextboxField(array(
@@ -1574,6 +1653,8 @@ class TextareaField extends FormField {
                     'translatable'=>$this->getTranslateTag('placeholder')),
             )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function validateEntry($value) {
@@ -1640,7 +1721,7 @@ class PhoneField extends FormField {
     static $widget = 'PhoneNumberWidget';
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'ext' => new BooleanField(array(
                 'label'=>__('Extension'), 'default'=>true,
                 'configuration'=>array(
@@ -1657,7 +1738,14 @@ class PhoneField extends FormField {
                 'choices'=>array(''=>'-- '.__('Unformatted').' --',
                     'us'=>__('United States')),
             )),
+            'display_columns' => new ChoiceField(array(
+                'id'=>7, 'label'=>__('Display Columns (Width)'), 'required'=>false,
+                'hint'=>__('Defaults to the max'),
+                'choices' => $this->getDisplayColumnChoices()
+            )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function validateEntry($value) {
@@ -1703,12 +1791,20 @@ class BooleanField extends FormField {
     static $widget = 'CheckboxWidget';
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'desc' => new TextareaField(array(
                 'id'=>1, 'label'=>__('Description'), 'required'=>false, 'default'=>'',
                 'hint'=>__('Text shown inline with the widget'),
-                'configuration'=>array('rows'=>2)))
+                'configuration'=>array('rows'=>2)
+            )),
+            'display_columns' => new ChoiceField(array(
+                    'id'=>7, 'label'=>__('Display Columns (Width)'), 'required'=>false,
+                    'hint'=>__('Defaults to the max'),
+                    'choices' => $this->getDisplayColumnChoices()
+            )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function to_database($value) {
@@ -1784,7 +1880,7 @@ class ChoiceField extends FormField {
     var $_choices;
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'choices'  =>  new TextareaField(array(
                 'id'=>1, 'label'=>__('Choices'), 'required'=>false, 'default'=>'',
                 'hint'=>__('List choices, one per line. To protect against spelling changes, specify key:value names to preserve entries if the list item names change.</br><b>Note:</b> If you have more than two choices, use a List instead.'),
@@ -1808,7 +1904,14 @@ class ChoiceField extends FormField {
                 'configuration'=>array(
                     'desc'=>'Allow multiple selections')
             )),
+            'display_columns' => new ChoiceField(array(
+                'id'=>7, 'label'=>__('Display Columns (Width)'), 'required'=>false,
+                'hint'=>__('Defaults to the max'),
+                'choices' => $this->getDisplayColumnChoices()
+            )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function parse($value) {
@@ -2069,6 +2172,14 @@ class NumericField extends FormField {
     }
 }
 
+class TimeField extends FormField {
+    static $widget = 'TimePickerWidget';
+
+    function getConfigurationOptions() {
+        return FormField::getDisplayConfigurationOptions();
+    }
+}
+
 class DatetimeField extends FormField {
     static $widget = 'DatetimePickerWidget';
 
@@ -2243,7 +2354,7 @@ class DatetimeField extends FormField {
     }
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'time' => new BooleanField(array(
                 'id'=>1, 'label'=>__('Time'), 'required'=>false, 'default'=>false,
                 'configuration'=>array(
@@ -2273,7 +2384,20 @@ class DatetimeField extends FormField {
                 'default'=>true, 'configuration'=>array(
                     'desc'=>__('Allow entries into the future' /* Used in the date field */)),
             )),
+            'validator' => new ChoiceField(array(
+                'id'=>3, 'label'=>__('Validator'), 'required'=>false, 'default'=>'',
+                'choices' => array(''=>__('None'), 'required_when'=>__('Required When (Select Field)'))
+            )),
+            'required_when' => new ChoiceField(array(
+                    'id'=>7, 'label'=>__('Select Field'), 'required'=>true,
+                    'visibility' => new VisibilityConstraint(
+                        new Q(array('validator__eq'=>'required_when')),
+                        VisibilityConstraint::HIDDEN
+                    ), 'choices' => $this->getBooleanFieldsAsChoices()
+            )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function validateEntry($value) {
@@ -2838,7 +2962,7 @@ class TimezoneField extends ChoiceField {
     }
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific =  array(
             'autodetect' => new BooleanField(array(
                 'id'=>1, 'label'=>__('Auto Detect'), 'required'=>false, 'default'=>true,
                 'configuration'=>array(
@@ -2850,6 +2974,8 @@ class TimezoneField extends ChoiceField {
                 'configuration'=>array('size'=>40, 'length'=>40),
             )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 }
 
@@ -3368,7 +3494,7 @@ class FileUploadField extends FormField {
         }
 
         global $cfg;
-        return array(
+        $fieldSpecific = array(
             'size' => new ChoiceField(array(
                 'label'=>__('Maximum File Size'),
                 'hint'=>__('Choose maximum size of a single file uploaded to this field'),
@@ -3396,6 +3522,8 @@ class FileUploadField extends FormField {
                 'configuration'=>array('size'=>8, 'length'=>4, 'placeholder'=>__('No limit')),
             ))
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     /**
@@ -3881,8 +4009,15 @@ class TextboxWidget extends Widget {
             $size = "size=\"{$config['size']}\"";
         if (isset($config['length']) && $config['length'])
             $maxlength = "maxlength=\"{$config['length']}\"";
-        if (isset($config['classes']))
-            $classes = 'class="'.$config['classes'].'"';
+        if (isset($config['classes'])) {
+            $tmp = $config['classes'];
+
+            if (isset($config['validator']) && $config['validator'] === 'required_when') {
+                $tmp = $tmp . ' sometimesrequired';
+            }
+
+            $classes = 'class="'.$tmp.'"';
+        }
         if (isset($config['autocomplete']))
             $autocomplete = 'autocomplete="'.($config['autocomplete']?'on':'off').'"';
         if (isset($config['autofocus']))
@@ -3893,6 +4028,12 @@ class TextboxWidget extends Widget {
             $translatable = 'data-translate-tag="'.$config['translatable'].'"';
         if (isset($options['in_table']) && $options['in_table']) {
             $use_name_instead_of_id = true;
+        }
+        if (isset($config['validator']) 
+            && $config['validator'] === 'required_when'
+            && $this->field->getRequiredWhenField()) {
+            $required_when = 'data-required-when="_' . $this->field->getRequiredWhenField()->getFormName() . '"';
+            
         }
         
         $type = static::$input_type;
@@ -3913,7 +4054,7 @@ class TextboxWidget extends Widget {
             <?php } ?>
             <?php echo implode(' ', array_filter(array(
                 $size, $maxlength, $classes, $autocomplete, $disabled,
-                $translatable, $placeholder, $autofocus))); ?>
+                $translatable, $placeholder, $autofocus, $required_when))); ?>
             name="<?php echo $this->name; ?>"
             value="<?php echo Format::htmlchars($this->value); ?>"/>
         <?php
@@ -4465,30 +4606,25 @@ class DatetimePickerWidget extends Widget {
             $datetime = new DateTime('now');
             $datetime->setTimezone($timezone);
         }
+
+        if (isset($config['validator']) && $config['validator'] === 'required_when') {
+            $required_when = 'data-required-when="_' . $this->field->getRequiredWhenField()->getFormName() . '"';    
+        }
         ?>
         <input type="text" name="<?php echo $this->name; ?>"
             id="<?php echo $this->id; ?>" style="display:inline-block;width:auto"
+            <?php echo $required_when ?>
             value="<?php echo Format::htmlchars($this->value ?: ''); ?>" size="12"
+            <?php if ($dt=$this->field->getMinDateTime()) { ?>  
+                data-min-value="<?php echo $dt->format('U')*1000; ?>"
+            <?php } ?>
+            <?php if ($dt=$this->field->getMaxDateTime()) {?>  
+                data-max-value="<?php echo $dt->format('U')*1000; ?>"
+            <?php } elseif (!$config['future']) { ?>
+                data-max-value="now"
+            <?php } ?>
+            data-date-format="<?php echo $cfg->getDateFormat(true); ?>"
             autocomplete="off" class="dp" />
-        <script type="text/javascript">
-            $(function() {
-                $('input[name="<?php echo $this->name; ?>"]').datepicker({
-                    <?php
-                    if ($dt=$this->field->getMinDateTime())
-                        echo sprintf("minDate: new Date(%s),\n", $dt->format('U')*1000);
-                    if ($dt=$this->field->getMaxDateTime())
-                        echo sprintf("maxDate: new Date(%s),\n", $dt->format('U')*1000);
-                    elseif (!$config['future'])
-                        echo "maxDate: new Date().getTime(),\n";
-                    ?>
-                    numberOfMonths: 2,
-                    showButtonPanel: true,
-                    buttonImage: './images/cal.png',
-                    showOn:'both',
-                    dateFormat: $.translate_format('<?php echo $cfg->getDateFormat(true); ?>')
-                });
-            });
-        </script>
         <?php
         if ($config['time']) {
             list($hr, $min) = explode(':', $datetime ?
@@ -4525,6 +4661,23 @@ class DatetimePickerWidget extends Widget {
         }
 
         return $value;
+    }
+}
+
+class TimePickerWidget extends Widget {
+    function render($options=array()) {
+        $datetime = new DateTime('now');
+
+        list($hr, $min) = explode(':', $datetime ?
+                $datetime->format('H:i') : '');
+        // TODO: Add time picker -- requires time picker or selection with
+        //       Misc::timeDropdown
+        echo '&nbsp;' . Misc::timeDropdown($hr, $min, $this->name);
+        echo sprintf('&nbsp;<span class="faded">(<a href="#"
+            data-placement="top" data-toggle="tooltip"
+            title="%s">%s</a>)</span>',
+        $datetime->getTimezone()->getName(),
+        $datetime->format('T'));
     }
 }
 
@@ -4742,7 +4895,7 @@ class FreeTextField extends FormField {
     protected $attachments;
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'content' => new TextareaField(array(
                 'configuration' => array('html' => true, 'size'=>'large'),
                 'label'=>__('Content'), 'required'=>true, 'default'=>'',
@@ -4755,6 +4908,8 @@ class FreeTextField extends FormField {
                 'configuration' => array('extensions'=>'')
             )),
         );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
     }
 
     function hasData() {
@@ -5632,7 +5787,6 @@ class TableField extends FormField {
 
             $output = $output . '</tr>';
         }
-
 
         return ($output . '</tbody></table>');
     } 
