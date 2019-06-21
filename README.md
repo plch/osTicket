@@ -4,12 +4,24 @@ osTicket
 A fork of osTicket in use by the Public Library of Cincinnati and Hamilton County for an internal help desk
 
 Development Setup:
-1. Install Composer (PHP package manager): https://getcomposer.org/
-2. Use Composer to install phing (Build runner) globally: `C:\osticket\> composer global require phing/phing`
-3. Set environment variables for beta and prod directories: OsTicketBetaDir and OsTicketProdDir
-    (Remember that you will need to restart open programs to access these new environment variables)
+1. Install and configure PHP 7.1 (these are the steps I followed: https://jamesmccaffrey.wordpress.com/2017/01/26/installing-php-on-windows-10-and-iis/)
+2. Install MySQL (version 8.0.16 is what the beta and prod servers run)
+3. Install the vendor supplied v1.11 version of osTicket
+4. Copy this code over that install. You should now be able to run / debug this code.
+5. (optional) If you want all of the AD users on your local system, copy the ldap_user_info/config.php.dist file to ldap_user_info/config.php and replace the %%tokens%%, then run that script via cmd
+5. Install Composer (PHP package manager): https://getcomposer.org/
+6. Use Composer to install phing (Build runner) globally: `C:\osticket\> composer global require phing/phing`. I'm recommending installing it globally because that adds it to your path.
+7. Set environment variables for build script. You can use the OsTicket Environment Variables.ps1 powershell script in the Web Team Knowledge Base folder on the Marketing shared drive to set
+  all of the needed environment variables. Make sure you update the OsTicketBetaDir and OsTicketProdDir variables so they map correctly from your system. Also remember that you will need to restart any
+  currently running programs or processes after the environment variables are created to access them.
 
-To deploy:
+To Build (outputs files to .\build folder):
+
+Beta: `C:\osticket\> phing beta_build`
+
+Prod: `C:\osticket\> phing prod_build`
+
+To Deploy:
 
 Beta: `C:\osticket\> phing beta`
 
@@ -23,7 +35,7 @@ Initial Production Deploy Steps:
 
 3. Import CS Data:
 
-  * The easiest way to import the CS data is to copy the database over and use OSTicket's builtin upgrader, so this should be done before we proceed with other changes. If we need to import data after making other changes to prod, there is an extra step to ensure that the imported data matches the current table layout.
+  * The easiest way to import the CS data is to copy the database over and use OSTicket's builtin upgrader, so I recommend doing this before any other changes. If we need to import data after making other changes to prod, there is an extra step to ensure that the imported data matches the current table layout.
 
     1. Exporting the Existing CS Data:
         1. Log on to the plchosticket server

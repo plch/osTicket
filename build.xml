@@ -73,7 +73,7 @@
         <mkdir dir="${builddir}" />
     </target> 
 
-    <target if="MySQLHost" name="build" depends="clean">
+    <target if="MySQLHost" name="build_impl" depends="clean">
         <copy todir="${builddir}">
             <fileset refid="sitefiles" />
         </copy>
@@ -117,25 +117,31 @@
         <include name="**" />
     </fileset> 
 
-    <target name="dev" depends="dev_config,build">
+    <target name="dev" depends="dev_config,build_impl">
         <copy todir="${devdir}" includeemptydirs="true" >
             <fileset refid="buildfiles" />
         </copy>
     </target>   
 
-    <target name="beta" depends="beta_config,build">
+    <target name="beta" depends="beta_config,build_impl">
         <copy todir="${betadir}" includeemptydirs="true" >
             <fileset refid="buildfiles" />
         </copy>
     </target> 
 
-    <target name="prod" depends="prod_config,build">
+    <target name="prod" depends="prod_config,build_impl">
         <copy todir="${proddir}" includeemptydirs="true" >
             <fileset refid="buildfiles" />
         </copy>
     </target>
 
-    <target name="testbuild" depends="beta_config,build">
+    <target name="build_dev" depends="beta_config,build_impl">
+    </target>
+
+    <target name="build_beta" depends="beta_config,build_impl">
+    </target>
+
+    <target name="build_prod" depends="beta_config,build_impl">
     </target>
        
 </project>
