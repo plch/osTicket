@@ -24,3 +24,5 @@ nbproject/
 phpinfo.php
 php.ini
 build/
+
+ldap_user_info/config.php
