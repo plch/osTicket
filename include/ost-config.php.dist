@@ -30,7 +30,7 @@ if(OSTINSTALLED!=TRUE){
 }
 
 # Encrypt/Decrypt secret key - randomly generated during installation.
-define('SECRET_SALT', '%%SecretSalt%%')
+define('SECRET_SALT','%%SecretSalt%%');
 
 #Default admin email. Used only on db connection issues and related alerts.
 define('ADMIN_EMAIL','%%AdminEmail%%');

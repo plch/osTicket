@@ -46,7 +46,7 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
         <?php
             $startNewRow = false; 
         } ?>
-            <td colspan="<?php echo $columnsToUse ?>" style="padding-top:10px;">
+            <td colspan="<?php echo $columnsToUse ?>" style="padding-top:10px;<?php if($field->isInitiallyHidden()) echo 'display:none;'; ?>">
             <?php if (!$field->isBlockLevel()) { ?>
                 <label for="<?php echo $field->getFormName(); ?>"><span class="<?php
                     if ($field->isRequiredForUsers()) echo 'required'; ?>">

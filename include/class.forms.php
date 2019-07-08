@@ -1243,12 +1243,23 @@ class FormField {
         return array();
     }
 
-    static function getDisplayConfigurationOptions() {
+    static function getDisplayConfigurationOptions($field) {
         return array('display_columns' => new ChoiceField(array(
-                'id'=>99, 'label'=>__('Display Columns (Width)'), 'required'=>false,
+                'label'=>__('Display Columns (Width)'), 'required'=>false,
                 'hint'=>__('Defaults to the max'),
                 'choices' => FormField::getDisplayColumnChoices()
-            ))
+        )),
+        'display_when' => new ChoiceField(array(
+            'label'=>__('Display When'), 'required'=>false,
+            'choices' => $field->getRequiredWhenChoices())),
+        'display_when_value' => new TextboxField(array(
+            'label'=>__('Display When Field Value Equals'), 'required'=>false,
+            'hint'=>__('Use true or false for checkboxes'),
+            'visibility' => new VisibilityConstraint(
+                new Q(array('display_when__set'=>true)),
+                VisibilityConstraint::HIDDEN
+            ),
+        )),
         );
     }
 
@@ -1449,37 +1460,60 @@ class FormField {
     function isRequiredSometimes() {
         $config = $this->getConfiguration();
 
-        if (isset($config['validator']) && $config['validator'] === 'required_when') {
+        if (isset($config['required_when'])) {
             return true;
         }
 
         return false;
     }
 
-    function getBooleanFieldsAsChoices() {
+    function getRequiredWhenChoices() {
         $form = $this->get('form');
+        $fieldChoices = array();
 
         if ($form) {
             $fields = $form->getFields();
 
-            $fieldChoices = array();
-
             foreach ($fields as $field) {
-                if (!$field instanceof BooleanField) continue;
+                if (!$field instanceof BooleanField
+                    && !$field instanceof SelectionField
+                    && !$field instanceof ChoiceField) continue;
+
                 if ($field->getId() == $this->getId()) continue;
 
                 $fieldChoices[$field->get('name')] = $field->get('name');
-            }
-
-            return $fieldChoices;
-        } else {
-            return array();
+            }        
         }
+
+        return $fieldChoices;
     }
 
     function getRequiredWhenField() {
         $config = $this->getConfiguration();
-        return $this->getForm()->getField($config['required_when']);
+        if (isset($config['required_when']) && $config['required_when']) { 
+            return $this->getForm()->getField($config['required_when']);
+        } 
+    }
+
+    function getDisplayWhenField() {
+        $config = $this->getConfiguration();
+        if (isset($config['display_when']) && $config['display_when']) { 
+            return $this->getForm()->getField($config['display_when']);
+        }         
+    }
+
+    function isInitiallyHidden() {
+        $config = $this->getConfiguration();
+
+        if (isset($config['required_when_visibility']) && $config['required_when_visibility'] == true) {
+            return true;
+        }
+
+        if (isset($config['display_when']) && $config['display_when']) {
+            return true;
+        }
+
+        return false;
     }
 }
 
@@ -1498,7 +1532,7 @@ class TextboxField extends FormField {
                 'id'=>3, 'label'=>__('Validator'), 'required'=>false, 'default'=>'',
                 'choices' => array('phone'=>__('Phone Number'),'email'=>__('Email Address'),
                     'ip'=>__('IP Address'), 'number'=>__('Number'),
-                    'regex'=>__('Custom (Regular Expression)'), 'required_when'=>__('Required When (Select Field)'), ''=>__('None')))),
+                    'regex'=>__('Custom (Regular Expression)')))),
             'regex' => new TextboxField(array(
                 'id'=>6, 'label'=>__('Regular Expression'), 'required'=>true,
                 'configuration'=>array('size'=>40, 'length'=>100),
@@ -1522,11 +1556,25 @@ class TextboxField extends FormField {
                         $self->addError(__('Cannot compile this regular expression'));
                 })),
             'required_when' => new ChoiceField(array(
-                    'id'=>7, 'label'=>__('Select Field'), 'required'=>true,
-                    'visibility' => new VisibilityConstraint(
-                        new Q(array('validator__eq'=>'required_when')),
-                        VisibilityConstraint::HIDDEN
-                    ), 'choices' => $this->getBooleanFieldsAsChoices())),
+                    'id'=>7, 'label'=>__('Required When'), 'required'=>false,
+                    'choices' => $this->getRequiredWhenChoices())),
+            'required_when_value' => new TextboxField(array(
+                'id'=>8, 'label'=>__('Required When Field Value Equals'), 'required'=>false,
+                'hint'=>__('Use true or false for checkboxes'),
+                'visibility' => new VisibilityConstraint(
+                    new Q(array('required_when__set'=>true)),
+                    VisibilityConstraint::HIDDEN
+                ),
+            )),
+            'required_when_visibility' => new BooleanField(array(
+                'id'=>9, 'label'=>__('Show Only When Required'), 'required'=>false,
+                'visibility' => new VisibilityConstraint(
+                    new Q(array('required_when__set'=>true)),
+                    VisibilityConstraint::HIDDEN
+                ),
+                'default'=>false,
+                'configuration'=>array(
+                    'desc'=>__("Only display the field when it is required for the EndUser")))),
             'validator-error' => new TextboxField(array(
                 'id'=>4, 'label'=>__('Validation Error'), 'default'=>'',
                 'configuration'=>array('size'=>40, 'length'=>60,
@@ -1542,7 +1590,7 @@ class TextboxField extends FormField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function validateEntry($value) {
@@ -1628,7 +1676,7 @@ class PasswordField extends TextboxField {
     }
 
     function getConfigurationOptions() {
-        return FormField::getDisplayConfigurationOptions();
+        return FormField::getDisplayConfigurationOptions($this);
     }
 }
 
@@ -1654,7 +1702,7 @@ class TextareaField extends FormField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function validateEntry($value) {
@@ -1745,7 +1793,7 @@ class PhoneField extends FormField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function validateEntry($value) {
@@ -1804,7 +1852,7 @@ class BooleanField extends FormField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function to_database($value) {
@@ -1911,7 +1959,7 @@ class ChoiceField extends FormField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function parse($value) {
@@ -2176,7 +2224,7 @@ class TimeField extends FormField {
     static $widget = 'TimePickerWidget';
 
     function getConfigurationOptions() {
-        return FormField::getDisplayConfigurationOptions();
+        return FormField::getDisplayConfigurationOptions($this);
     }
 }
 
@@ -2384,20 +2432,29 @@ class DatetimeField extends FormField {
                 'default'=>true, 'configuration'=>array(
                     'desc'=>__('Allow entries into the future' /* Used in the date field */)),
             )),
-            'validator' => new ChoiceField(array(
-                'id'=>3, 'label'=>__('Validator'), 'required'=>false, 'default'=>'',
-                'choices' => array(''=>__('None'), 'required_when'=>__('Required When (Select Field)'))
-            )),
             'required_when' => new ChoiceField(array(
-                    'id'=>7, 'label'=>__('Select Field'), 'required'=>true,
-                    'visibility' => new VisibilityConstraint(
-                        new Q(array('validator__eq'=>'required_when')),
-                        VisibilityConstraint::HIDDEN
-                    ), 'choices' => $this->getBooleanFieldsAsChoices()
+                    'id'=>7, 'label'=>__('Required When'), 'required'=>false,
+                    'choices' => $this->getRequiredWhenChoices())),
+            'required_when_value' => new TextboxField(array(
+                'id'=>8, 'label'=>__('Required When Field Value Equals'), 'required'=>false,
+                'hint'=>__('Use true or false for checkboxes'),
+                'visibility' => new VisibilityConstraint(
+                    new Q(array('required_when__set'=>true)),
+                    VisibilityConstraint::HIDDEN
+                ),
             )),
+            'required_when_visibility' => new BooleanField(array(
+                'id'=>9, 'label'=>__('Show Only When Required'), 'required'=>false,
+                'visibility' => new VisibilityConstraint(
+                    new Q(array('required_when__set'=>true)),
+                    VisibilityConstraint::HIDDEN
+                ),
+                'default'=>false,
+                'configuration'=>array(
+                    'desc'=>__("Only display the field when it is required for the EndUser")))),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function validateEntry($value) {
@@ -2975,7 +3032,7 @@ class TimezoneField extends ChoiceField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 }
 
@@ -3520,10 +3577,10 @@ class FileUploadField extends FormField {
                 'required'=>false,
                 'validator'=>'number',
                 'configuration'=>array('size'=>8, 'length'=>4, 'placeholder'=>__('No limit')),
-            ))
+            )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     /**
@@ -4012,10 +4069,9 @@ class TextboxWidget extends Widget {
         if (isset($config['classes'])) {
             $tmp = $config['classes'];
 
-            if (isset($config['validator']) && $config['validator'] === 'required_when') {
+            if (isset($config['required_when'])) {
                 $tmp = $tmp . ' sometimesrequired';
             }
-
             $classes = 'class="'.$tmp.'"';
         }
         if (isset($config['autocomplete']))
@@ -4029,11 +4085,14 @@ class TextboxWidget extends Widget {
         if (isset($options['in_table']) && $options['in_table']) {
             $use_name_instead_of_id = true;
         }
-        if (isset($config['validator']) 
-            && $config['validator'] === 'required_when'
-            && $this->field->getRequiredWhenField()) {
-            $required_when = 'data-required-when="_' . $this->field->getRequiredWhenField()->getFormName() . '"';
+        if (isset($config['required_when']) && $this->field->getRequiredWhenField()) {
+            $required_when = 'data-required-when="_' . $this->field->getRequiredWhenField()->getFormName() . '"'
+                        . ' data-required-when-value="' . $config['required_when_value'] . '"';
             
+        }
+
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
         }
         
         $type = static::$input_type;
@@ -4054,7 +4113,7 @@ class TextboxWidget extends Widget {
             <?php } ?>
             <?php echo implode(' ', array_filter(array(
                 $size, $maxlength, $classes, $autocomplete, $disabled,
-                $translatable, $placeholder, $autofocus, $required_when))); ?>
+                $translatable, $placeholder, $autofocus, $required_when, $display_when))); ?>
             name="<?php echo $this->name; ?>"
             value="<?php echo Format::htmlchars($this->value); ?>"/>
         <?php
@@ -4126,12 +4185,17 @@ class TextareaWidget extends Widget {
         }
         if (isset($config['context']))
             $attrs['data-root-context'] = '"'.$config['context'].'"';
+
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+        }
         ?>
         <span style="display:inline-block;width:100%">
         <textarea <?php echo $rows." ".$cols." ".$maxlength." ".$class
                 .' '.Format::array_implode('=', ' ', $attrs)
                 .' placeholder="'.$config['placeholder'].'"'; ?>
-            <?php if ($use_name_instead_of_id) { ?>
+            <?php echo $display_when;
+            if ($use_name_instead_of_id) { ?>
             name="<?php echo $this->name; ?>[]"    
             <?php } else { ?>
             id="<?php echo $this->id; ?>"
@@ -4220,6 +4284,10 @@ class ChoicesWidget extends Widget {
             $config['multiselect'] = true;
         }
 
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+        }
+
         $associated_field = null;
         if ($config['restrict'] !== null) {         
             $fields = $this->field->getForm()->getFields();
@@ -4268,6 +4336,7 @@ class ChoicesWidget extends Widget {
             <?php if ($associated_field !== null)
                 echo 'data-associated-field="' . $associated_field->getFormName() . '"';
             ?>
+            <?php echo $display_when ?>
             <?php echo implode(' ', array_filter(array($classes))); ?>
             id="<?php echo $this->id; ?>"
             <?php if (isset($config['data']))
@@ -4607,13 +4676,19 @@ class DatetimePickerWidget extends Widget {
             $datetime->setTimezone($timezone);
         }
 
-        if (isset($config['validator']) && $config['validator'] === 'required_when') {
-            $required_when = 'data-required-when="_' . $this->field->getRequiredWhenField()->getFormName() . '"';    
+        if (isset($config['required_when']) && $this->field->getRequiredWhenField()) {
+            $required_when = 'data-required-when="_' . $this->field->getRequiredWhenField()->getFormName() . '"'
+                . ' data-required-when-value="' . $config['required_when_value'] . '"';   
+        }
+
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
         }
         ?>
         <input type="text" name="<?php echo $this->name; ?>"
             id="<?php echo $this->id; ?>" style="display:inline-block;width:auto"
             <?php echo $required_when ?>
+            <?php echo $display_when ?>
             value="<?php echo Format::htmlchars($this->value ?: ''); ?>" size="12"
             <?php if ($dt=$this->field->getMinDateTime()) { ?>  
                 data-min-value="<?php echo $dt->format('U')*1000; ?>"
@@ -4665,7 +4740,7 @@ class DatetimePickerWidget extends Widget {
 }
 
 class TimePickerWidget extends Widget {
-    function render($options=array()) {
+    function render($options=array()) {       
         $datetime = new DateTime('now');
 
         list($hr, $min) = explode(':', $datetime ?
@@ -4771,6 +4846,10 @@ class FileUploadWidget extends Widget {
         $files = array();
         $new = $this->field->getClean(false);
 
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+        }
+
         foreach ($this->field->getAttachments() as $att) {
             unset($new[$att->file_id]);
             $files[] = array(
@@ -4802,7 +4881,7 @@ class FileUploadWidget extends Widget {
         }
 
         ?><div id="<?php echo $id;
-            ?>" class="filedrop"><div class="files"></div>
+            ?>" <?php echo $display_when ?> class="filedrop"><div class="files"></div>
             <div class="dropzone"><i class="icon-upload"></i>
             <?php echo sprintf(
                 __('Drop files here or %s choose them %s'),
@@ -4909,7 +4988,7 @@ class FreeTextField extends FormField {
             )),
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function hasData() {
@@ -5015,6 +5094,7 @@ class ColorPickerWidget extends Widget {
 class VisibilityConstraint {
     static $operators = array(
         'eq' => 1,
+        'set' => 2
     );
 
     const HIDDEN =      0x0001;
@@ -5106,6 +5186,9 @@ class VisibilityConstraint {
                 $field = $form->getField($f);
                 $wval = $field ? $field->getClean() : null;
                 switch ($op) {
+                case 'set':
+                    $expr[] = ((($value && isset($wval)) || (!$value && !isset($wval))) && $field->isVisible());
+                    break;
                 case 'eq':
                 case null:
                     $expr[] = ($wval == $value && $field->isVisible());
@@ -5146,6 +5229,16 @@ class VisibilityConstraint {
                 $widget = $form->getField($f)->getWidget();
                 $id = $widget->id;
                 switch ($op) {
+                case 'set':
+                    $expr[] = sprintf('(%s.is(":visible") && %s)', 
+                        $id,
+                        sprintf('(%s && %s) || (!%s && !%s)', 
+                            sprintf($widget->getJsValueGetter(), $id),
+                            JsonDataEncoder::encode($value),
+                            sprintf($widget->getJsValueGetter(), $id),
+                            JsonDataEncoder::encode($value))
+                    );  
+                    break;                  
                 case 'eq':
                 case null:
                     $expr[] = sprintf('(%s.is(":visible") && %s)',
@@ -5705,11 +5798,14 @@ class TableField extends FormField {
     }
 
     function getConfigurationOptions() {
-        return array(
+        $fieldSpecific = array(
             'form' => new ChoiceField(array(
                 'id'=>1, 'label'=>__('Form'), 'required'=>true, 'default'=>'',
                 'choices' => $this->getFormChoices()
-            )));
+            )),
+        );
+
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function validateEntry($value) {
@@ -5801,10 +5897,14 @@ class TableWidget extends Widget {
                     $config[$k] = $v;
         }
 
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+        }
+
         $form = DynamicForm::lookup($config['form'])->getForm();
 
         ?>
-        <div><?php echo $form->renderAsTable(array(), $this->value, $this->field->errors()) ?></div>
+        <div class='table-form-container' <?php echo $display_when ?>><?php echo $form->renderAsTable(array(), $this->value, $this->field->errors()) ?></div>
         <?php
     }
 

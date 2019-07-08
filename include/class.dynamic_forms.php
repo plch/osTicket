@@ -1745,7 +1745,7 @@ class SelectionField extends FormField {
             ))
         );
 
-        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions());
+        return array_merge($fieldSpecific, FormField::getDisplayConfigurationOptions($this));
     }
 
     function getConfiguration() {
@@ -1909,6 +1909,10 @@ class TypeaheadSelectionWidget extends ChoicesWidget {
                 $name = current($def_key);
         }
 
+        if (isset($config['display_when']) && !($config['display_when'] == false)) {
+            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+        }
+
         $source = array();
         foreach ($this->field->getList()->getItems() as $i)
             $source[] = array(
@@ -1920,6 +1924,7 @@ class TypeaheadSelectionWidget extends ChoicesWidget {
         ?>
         <span style="display:inline-block">
         <input type="text" size="30" name="<?php echo $this->name; ?>_name"
+            <?php echo $display_when ?>
             id="<?php echo $this->name; ?>" value="<?php echo Format::htmlchars($name); ?>"
             placeholder="<?php echo $config['prompt'];
             ?>" autocomplete="off" />

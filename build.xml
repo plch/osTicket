@@ -130,9 +130,17 @@
     </target> 
 
     <target name="prod" depends="prod_config,build_impl">
+         <exec executable="powershell.exe" logoutput="true" escape="false">
+            <arg value="'&amp; .\Make-Config-Writable.ps1'" />
+        </exec>
         <copy todir="${proddir}" includeemptydirs="true" >
             <fileset refid="buildfiles" />
         </copy>
+        <chmod file="${proddir}/ldap_user_info/config.php" mode="0644" />
+        <chmod file="${proddir}/include/ost-config.php" mode="0644" />
+        <exec executable="powershell.exe" logoutput="true" escape="false">
+            <arg value="'&amp; .\Make-Config-ReadOnly.ps1'" />
+        </exec>
     </target>
 
     <target name="build_dev" depends="beta_config,build_impl">
