@@ -65,9 +65,14 @@ $isCreate = (isset($options['mode']) && $options['mode'] == 'create');
                     <br /><em style="color:gray;display:inline-block"><?php
                         echo Format::viewableImages($field->getLocal('hint')); ?></em>
                 <?php
-                } ?>
-            <br/>
-            <?php
+            }
+
+                if ($field->showLabelInline()) { ?>
+                    &nbsp;&nbsp;
+                <?php 
+                } else { ?>
+                    <br/>
+                <?php }
             }
             if ($field->isEditableToUsers() || $isCreate) {
                 $field->render(array('client'=>true));

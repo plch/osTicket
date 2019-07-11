@@ -749,6 +749,18 @@ class FormField {
         if ($this->get('visibility') instanceof VisibilityConstraint) {
             return $this->get('visibility')->isVisible($this);
         }
+
+        $config = $this->getConfiguration();
+
+        if (isset($config["display_when"]) && $config["display_when"] != false)  {
+            $constraint = new VisibilityConstraint(
+                new Q(array($config["display_when"] . '__eq'=>$config["display_when_value"])),
+                VisibilityConstraint::HIDDEN
+            );
+
+            return $constraint->isVisible($this);
+        }
+
         return true;
     }
 
@@ -1512,6 +1524,12 @@ class FormField {
         if (isset($config['display_when']) && $config['display_when']) {
             return true;
         }
+
+        return false;
+    }
+
+    function showLabelInline() {
+        if ($this instanceof BooleanField) return true;
 
         return false;
     }
@@ -4301,7 +4319,7 @@ class ChoicesWidget extends Widget {
 
         // Determine the value for the default (the one listed if nothing is
         // selected)
-        $choices = $this->field->getChoices(true);
+        $choices = $this->field->getChoices(true, isset($config['restrict']) && $config['restrict']);
         $prompt = ($config['prompt'])
             ? $this->field->getLocal('prompt', $config['prompt'])
             : __('Select'
@@ -5809,9 +5827,15 @@ class TableField extends FormField {
     }
 
     function validateEntry($value) {
-        $form = DynamicForm::lookup($this->getConfiguration()['form'])->getForm();
+        $config = $this->getConfiguration();
+        $form = DynamicForm::lookup($config['form'])->getForm();
         $fields = $form->getFields();
         $has_errors = false;
+
+        if (!($value)) {
+            $this->_errors = array();
+            return;
+        }
 
         foreach($value as $row) {
             $idx = 0;
@@ -5852,6 +5876,24 @@ class TableField extends FormField {
     }
 
     function display($value) {
+        if (empty($value)) return parent::display('');
+
+        $hasValues = false; 
+
+        foreach ($value as $row) {
+            foreach ($row as $field) {
+                if ($field != false) {
+                    $hasValues = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$hasValues) {
+            return parent::display('');
+        }
+        
+
         $output = '<table class="table-form-display"><thead><tr>';
 
         $form = DynamicForm::lookup($this->getConfiguration()['form'])->getForm();

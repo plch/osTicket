@@ -1486,26 +1486,58 @@ class SelectionField extends FormField {
 
     function display($value) {
         global $thisstaff;
+        $config = $this->getConfiguration();
 
-        if (!is_array($value)
-                || !$thisstaff // Only agents can preview for now
-                || !($list=$this->getList()))
-            if ($value == 0) return parent::display('');
+        if ($config['show_properties']) {
+            $display = array();
+            $display[] = sprintf('%s<br />', parent::display($value)); 
+            list($itemKey) = array_keys($value);
+            $item = $this->getList()->getItem($itemKey);
 
-            return parent::display($value);
+            $subFields = $this->getSubFields();
+ 
+            foreach ($subFields as $subField) {
+                $fieldName = $subField->get('name');
+                $val = $item->getVar($fieldName);
 
-        $display = array();
-        foreach ($value as $k => $v) {
-            if (is_numeric($k)
-                    && ($i=$list->getItem((int) $k))
-                    && $i->hasProperties())
-                $display[] = $i->display();
-            else // Perhaps deleted  entry
-                $display[] = $v;
+                if ($val) {
+                    if (strpos($fieldName, 'city') !== false) {
+                        $display[] = sprintf('%s', $val);
+                    } else if (strpos($fieldName, 'state') !== false) {
+                        $display[] = sprintf(', %s', $val);
+                    } else if (strpos($fieldName, 'zip') !== false) {
+                        $display[] = sprintf(' %s', $val);
+                    } else {
+                        $display[] = sprintf('%s<br />',$val);
+                    }
+
+                    
+                }
+            }
+
+            return implode('', $display);
         }
+        else {
+            if (!is_array($value)
+                    || !$thisstaff // Only agents can preview for now
+                    || !($list=$this->getList())) {
+                if ($value == 0) return parent::display('');
 
-        return implode(',', $display);
+                return parent::display($value);
+            }
 
+            $display = array();
+            foreach ($value as $k => $v) {
+                if (is_numeric($k)
+                        && ($i=$list->getItem((int) $k))
+                        && $i->hasProperties())
+                    $display[] = $i->display();
+                else // Perhaps deleted  entry
+                    $display[] = $v;
+            }
+
+            return implode(',', $display);
+        }
     }
 
     function parse($value) {
@@ -1625,6 +1657,7 @@ class SelectionField extends FormField {
     function hasSubFields() {
         return $this->getList()->getForm();
     }
+
     function getSubFields() {
         $fields = new ListObject(array(
             new TextboxField(array(
@@ -1742,6 +1775,9 @@ class SelectionField extends FormField {
                 'id'=>4, 'label'=>__('Default'), 'required'=>false, 'default'=>'',
                 'list_id'=>$this->getListId(),
                 'configuration' => array('prompt'=>__('Select a Default')),
+            )),
+            'show_properties' => new BooleanField(array(
+                'label'=>__('Show Properties on Ticket'), 'required'=>false
             ))
         );
 
@@ -1761,11 +1797,11 @@ class SelectionField extends FormField {
         return $config;
     }
 
-    function getChoices($verbose=false) {
+    function getChoices($verbose=false, $hasassociatedtype=false) {
         if (!$this->_choices || $verbose) {
             $choices = array();
             foreach ($this->getList()->getItems() as $i) {
-                if ($i->hasProperties() && $i->getVar('associated_type'))
+                if ($hasassociatedtype)
                 {
                     $choices[$i->getId()] = array('name' => $i->getValue(), 'associated_type' => $i->getVar('associated_type'));
                 }

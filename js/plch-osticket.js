@@ -7,13 +7,14 @@ $(function() {
         e.preventDefault();
 
         let template = $(this).closest(".table-form-container").find(".row-template").html();
-        let table = $(this).closest(".table-form-container").find(".table-form");
+        let table = $(this).closest(".table-form-container").find(".table-form").children("tbody");
 
         table.append(template);
         
         $(".remove-form-row", table).show();
 
         PLCH.RedactorInit();
+        bindDatePickers();
     });
 
     $(document).on("click", ".remove-form-row:not(.disabled)", function(e){
@@ -71,6 +72,9 @@ $(function() {
 
         $("[data-display-when]").each(function (index){
             let displayWhen = $("#" + $(this).data("displayWhen"));
+
+            if (displayWhen.length == 0) displayWhen = $("#" + $(this).data("displayWhen").slice(1));
+
             let displayWhenVal = $(this).data("displayWhenValue")
             let _this = this;
 
@@ -106,6 +110,9 @@ $(function() {
 
         $("input[data-required-when]").each(function (index){
             let requiredWhen = $("#" + $(this).data("requiredWhen"));
+
+            if (requiredWhen.length == 0) requiredWhen = $("#" + $(this).data("requiredWhen").slice(1));
+
             let requiredWhenVal = $(this).data("requiredWhenValue")
             let requiredLabel = $(this).closest("label");
             let _this = this;
@@ -149,6 +156,10 @@ $(function() {
             }
         });
 
+        bindDatePickers();
+    }
+
+    function bindDatePickers() {
         $("input.dp").each(function() {
             var config = {
                 numberOfMonths: 2,

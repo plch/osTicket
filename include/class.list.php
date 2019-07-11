@@ -753,7 +753,8 @@ class DynamicListItem extends VerySimpleModel implements CustomListItem {
     function getVar($name) {
         $config = $this->getConfiguration();
         $name = mb_strtolower($name);
-        foreach ($this->getConfigurationForm()->getFields() as $field) {
+        $form = $this->getConfigurationForm();
+        foreach ($form->getFields() as $field) {
             if (mb_strtolower($field->get('name')) == $name)
                 return $field->asVar($config[$field->get('id')]);
         }

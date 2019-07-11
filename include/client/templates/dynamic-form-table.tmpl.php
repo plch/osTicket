@@ -166,7 +166,7 @@ if (empty($formData)) {
                     </td>
                 <?php
             } ?>
-            <td><button type="button" class="remove-form-row secondary button small" name="DeleteRow"><i class="icon-large icon-trash"></i></button></td>
+            <td><button type="button" class="remove-form-row secondary button small" name="DeleteRow"><i class="icon-trash"></i></button></td>
         </tr>
     </script>
 </div>
