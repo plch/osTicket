@@ -2245,15 +2245,15 @@ time.faq {
     background-color:#f8f8f8!IMPORTANT;
 }
 .dialog#popup {
-    width:650px;
+    width:70%;
 }
 
 .dialog.size-normal {
-    width:650px !important;
+    width:70% !important;
 }
 
 .dialog.size-large {
-    width:750px !important;
+    width:90% !important;
 }
 
 .dialog #popup-loading {
