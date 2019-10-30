@@ -63,6 +63,7 @@ if (empty($formData)) {
         <tbody>
         <?php
         foreach ($formData as $rowIndex => $row) {
+            $fieldIndex = 0;
             ?> <tr> <?php
             foreach ($form->getFields() as $field) {
                 try {
