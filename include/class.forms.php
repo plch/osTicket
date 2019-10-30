@@ -5912,7 +5912,7 @@ class TableField extends FormField {
                     {
                         $index = (int)$tuple[$idx];
                         $listItem = $field->getList()->getItem($index);
-                        $selections = array($index => $listItem->getValue());
+                        $selections = array($index => isset($listItem) ? $listItem->getValue() : '');
                         $output = $output . '<td><div>' . $field->display($selections) . '</div></td>';
                     }
                     else
