@@ -5911,7 +5911,8 @@ class TableField extends FormField {
                     if ($field instanceof SelectionField)
                     {
                         $index = (int)$tuple[$idx];
-                        $selections = array($index => $tuple[$idx]);
+                        $listItem = $field->getList()->getItem($index);
+                        $selections = array($index => $listItem->getValue());
                         $output = $output . '<td><div>' . $field->display($selections) . '</div></td>';
                     }
                     else
