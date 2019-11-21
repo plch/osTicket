@@ -513,6 +513,7 @@ if($ticket->isOverdue())
                 </tr>
                 <?php
                 } ?>
+                <?php if ($sla) {?>
                 <tr>
                     <th><?php echo __('SLA Plan');?>:</th>
                     <td>
@@ -556,7 +557,7 @@ if($ticket->isOverdue())
                 </tr>
                 <?php
                 }
-                ?>
+                ?> <?php } ?>
             </table>
         </td>
         <td width="50%">
@@ -577,6 +578,7 @@ if($ticket->isOverdue())
                              <td><?php echo Format::htmlchars($ticket->getHelpTopic()); ?></td>
                         <?php } ?>
                 </tr>
+                <?php if ($sla) {?>
                 <tr>
                     <th nowrap><?php echo __('Last Message');?>:</th>
                     <td><?php echo Format::datetime($ticket->getLastMsgDate()); ?></td>
@@ -585,6 +587,7 @@ if($ticket->isOverdue())
                     <th nowrap><?php echo __('Last Response');?>:</th>
                     <td><?php echo Format::datetime($ticket->getLastRespDate()); ?></td>
                 </tr>
+                <?php } ?>
             </table>
         </td>
     </tr>
