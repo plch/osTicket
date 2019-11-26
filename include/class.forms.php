@@ -3801,11 +3801,17 @@ class FileUploadField extends FormField {
     function display($value) {
         $links = array();
         foreach ($this->getAttachments() as $a) {
-            $links[] = sprintf('<a class="no-pjax" href="%s"><i class="icon-paperclip icon-flip-horizontal"></i> %s</a>',
+            $links[] = sprintf('<a class="no-pjax" href="%s" download="%s"><i class="icon-paperclip icon-flip-horizontal"></i> %s</a>',
                 Format::htmlchars($a->file->getDownloadUrl()),
+                Format::htmlchars($a->getFilename()),
                 Format::htmlchars($a->getFilename()));
+            if ($a->displayNewTabLink()) {
+                $links[] = sprintf('&nbsp;<a class="no-pjax" target="_blank" href="%s"><img src="%s"/></a>&nbsp;&nbsp;',
+                Format::htmlchars($a->file->getDownloadUrl()),
+                Format::htmlchars($a->getIconUrl()));
+            }
         }
-        return implode('<br/>', $links);
+        return implode($links);
     }
 
     function toString($value) {
