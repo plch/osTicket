@@ -43,6 +43,7 @@ class Attachment extends VerySimpleModel {
     );
 
     var $object;
+    var $iconUrl = "https://img.icons8.com/officexs/16/000000/open-view.png";
 
     function getId() {
         return $this->id;
@@ -62,6 +63,27 @@ class Attachment extends VerySimpleModel {
 
     function getName() {
         return $this->getFilename();
+    }
+
+    function getIconUrl() {
+        return $this->iconUrl;
+    }
+
+    function getExtension() {
+        $extension;    
+        foreach (str_split((strrev($this->getName()))) as $char) {
+            if (strcmp($char, '.') == 0) break;
+            $extension .= $char;
+        }
+        return strtoupper(strrev($extension));
+    }
+
+    function getNewTabExtensions() {
+        return array('PDF', 'TXT', 'PNG', 'JPG');
+    }
+
+    function displayNewTabLink() {
+        return in_array($this->getExtension(), $this->getNewTabExtensions());
     }
 
     function getHashtable() {
