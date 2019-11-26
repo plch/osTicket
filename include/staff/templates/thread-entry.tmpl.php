@@ -104,7 +104,13 @@ if ($user && $cfg->isAvatarsEnabled())
         $A->file->getDownloadUrl(['id' => $A->getId()]);
             ?>" download="<?php echo Format::htmlchars($A->getFilename()); ?>"
             target="_blank"><?php echo Format::htmlchars($A->getFilename());
-        ?></a><?php echo $size;?>
+        ?></a>
+        <?php if ($A->displayNewTabLink()) { ?>
+         <a class="no=pjax truncate filename" 
+         href="<?php echo $A->file->getDownloadUrl(['id' => $A->getId()]);
+         ?>" target="_blank"> <img src="<?php echo $A->getIconUrl()?>"></a>
+        <?php } ?>
+		<?php echo $size;?>
         </span>
 <?php   }
     echo '</div>';
