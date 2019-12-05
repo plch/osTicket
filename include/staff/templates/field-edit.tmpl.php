@@ -59,3 +59,9 @@ $action = $info[':action'] ?: ('#');
 </form>
 </div>
 <div class="clear"></div>
+
+<script>
+    $(document).ready(function(){
+        $(".custom-field").show();
+    })
+</script>

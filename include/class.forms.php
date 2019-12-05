@@ -5947,7 +5947,12 @@ class TableWidget extends Widget {
         }
 
         if (isset($config['display_when']) && !($config['display_when'] == false)) {
-            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            if ($this->field->getDisplayWhenField() != null){
+                $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            }
+            else{
+                $display_when = 'data-display-when="" data-display-when-value=""';
+            }
         }
 
         $form = DynamicForm::lookup($config['form'])->getForm();
