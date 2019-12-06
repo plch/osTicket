@@ -70,6 +70,8 @@ implements TemplateVariable, Searchable {
     const FLAG_ACTIVE = 0x0002;
     const FLAG_ARCHIVED = 0x0004;
 
+    const PLCH_FLAG_CLOSED_NOTIFICATIONS = 0x0001;
+
     const SORT_ALPHA = 'a';
     const SORT_MANUAL = 'm';
 
@@ -316,6 +318,20 @@ implements TemplateVariable, Searchable {
             $this->flags &= ~$flag;
     }
 
+    /**
+     * setPlchFlag
+     *
+     * Utility method to set/unset plch_flag bits
+     *
+     */
+    public function setPlchFlag($flag, $val) {
+
+        if ($val)
+            $this->plch_flags |= $flag;
+        else
+            $this->plch_flags &= ~$flag;
+    }
+
     static function getHelpTopics($publicOnly=false, $disabled=false, $localize=true, $whitelist=array()) {
       global $cfg;
       static $topics, $names = array();
@@ -457,6 +473,8 @@ implements TemplateVariable, Searchable {
         $this->flags = $vars['custom-numbers'] ? self::FLAG_CUSTOM_NUMBERS : $this->flags;
         $this->noautoresp = !!$vars['noautoresp'];
         $this->notes = Format::sanitize($vars['notes']);
+
+        $this->setPlchFlag(self::PLCH_FLAG_CLOSED_NOTIFICATIONS, !!$vars['completedEmails']);
 
         $filter_actions = FilterAction::objects()->filter(array('type' => 'topic', 'configuration' => '{"topic_id":'. $this->getId().'}'));
         if ($filter_actions && $vars['status'] == 'active')
