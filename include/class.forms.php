@@ -4116,7 +4116,12 @@ class TextboxWidget extends Widget {
         }
 
         if (isset($config['display_when']) && !($config['display_when'] == false)) {
-            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            if ($this->field->getDisplayWhenField() != null){
+                $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            }
+            else{
+                $display_when = 'data-display-when="" data-display-when-value=""';
+            }
         }
         
         $type = static::$input_type;
@@ -4210,9 +4215,14 @@ class TextareaWidget extends Widget {
         if (isset($config['context']))
             $attrs['data-root-context'] = '"'.$config['context'].'"';
 
-        if (isset($config['display_when']) && !($config['display_when'] == false)) {
-            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
-        }
+            if (isset($config['display_when']) && !($config['display_when'] == false)) {
+                if ($this->field->getDisplayWhenField() != null){
+                    $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+                }
+                else{
+                    $display_when = 'data-display-when="" data-display-when-value=""';
+                }
+            }
         ?>
         <span style="display:inline-block;width:100%">
         <textarea <?php echo $rows." ".$cols." ".$maxlength." ".$class
@@ -4309,7 +4319,12 @@ class ChoicesWidget extends Widget {
         }
 
         if (isset($config['display_when']) && !($config['display_when'] == false)) {
-            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            if ($this->field->getDisplayWhenField() != null){
+                $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            }
+            else{
+                $display_when = 'data-display-when="" data-display-when-value=""';
+            }
         }
 
         $associated_field = null;
@@ -4705,8 +4720,14 @@ class DatetimePickerWidget extends Widget {
                 . ' data-required-when-value="' . $config['required_when_value'] . '"';   
         }
 
+        
         if (isset($config['display_when']) && !($config['display_when'] == false)) {
-            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            if ($this->field->getDisplayWhenField() != null){
+                $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            }
+            else{
+                $display_when = 'data-display-when="" data-display-when-value=""';
+            }
         }
         ?>
         <input type="text" name="<?php echo $this->name; ?>"
@@ -4871,7 +4892,12 @@ class FileUploadWidget extends Widget {
         $new = $this->field->getClean(false);
 
         if (isset($config['display_when']) && !($config['display_when'] == false)) {
-            $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            if ($this->field->getDisplayWhenField() != null){
+                $display_when = 'data-display-when="_' . $this->field->getDisplayWhenField()->getFormName() . '" data-display-when-value="' . $config['display_when_value'] . '"';
+            }
+            else{
+                $display_when = 'data-display-when="" data-display-when-value=""';
+            }
         }
 
         foreach ($this->field->getAttachments() as $att) {
