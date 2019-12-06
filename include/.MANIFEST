@@ -617,6 +617,7 @@ f67594aa91269309ddad0a470c3a3c07ac85e151 include/i18n/en_US/sequence.yaml
 4bbcfae98c8921eb014ae3d8e3d58e465efe2617 include/i18n/en_US/sla.yaml
 136de6505dc57c689d06142771e897069423f129 include/i18n/en_US/team.yaml
 40087d4cd25fcbd5e9b989caec1cd7cab517bbd1 include/i18n/en_US/templates/email/assigned.alert.yaml
+a1d69ee1e4b34cac8f2bc75d53341b1b694e50c8 include/i18n/en_US/templates/email/closed.alert.yaml
 13826fba84fb204c462a57f326728c0b06f0a7b4 include/i18n/en_US/templates/email/message.alert.yaml
 ec8c6fb521c4875c014a0ec4f4707b7bac6f72da include/i18n/en_US/templates/email/message.autoresp.yaml
 5a1bcd91e3d69d21fe5b61ba4e1ab7cc9d2405e1 include/i18n/en_US/templates/email/note.alert.yaml

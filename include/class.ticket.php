@@ -1365,6 +1365,7 @@ implements RestrictedAccess, Threadable, Searchable {
                 if ($thisstaff && $set_closing_agent)
                     $this->staff = $thisstaff;
                 $this->clearOverdue(false);
+                $this->onClose();
 
                 $ecb = function($t) use ($status) {
                     $t->logEvent('closed', array('status' => array($status->getId(), $status->getName())));
@@ -1997,6 +1998,37 @@ implements RestrictedAccess, Threadable, Searchable {
                 $alert = $this->replaceVars($msg, array('recipient' => $staff));
                 $email->sendAlert($staff, $alert['subj'], $alert['body'], null);
                 $sentlist[] = $staff->getEmail();
+            }
+        }
+        return true;
+    }
+
+    function onClose() {
+        global $thisstaff;
+
+        if($this->topic->plch_flags&Topic::PLCH_FLAG_CLOSED_NOTIFICATIONS) {
+            $dept = $this->getDept();
+            if (!$dept
+                || !($tpl = $dept->getTemplate())
+                || !($email = $dept->getAlertEmail())
+            ) {
+                return true;
+            }
+
+            // Get department manager
+            if ($dept && $dept->getManagerId())
+                $manager = $dept->getManager();
+
+            // Get the message template
+            if ($manager
+                && ($msg=$tpl->getClosedAlertMsgTemplate())
+            ) {
+                $msg = $this->replaceVars($msg->asArray(), array('staff' => $thisstaff));
+                // Send the alerts.
+                $sentlist = array();
+                $alert = $this->replaceVars($msg, array('recipient' => $manager));
+                $email->sendAlert($manager, $alert['subj'], $alert['body']);
+                $sentlist[] = $manager->getEmail();          
             }
         }
         return true;

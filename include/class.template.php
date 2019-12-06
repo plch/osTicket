@@ -116,6 +116,14 @@ class EmailTemplateGroup {
                 'ticket', 'recipient', 'comments', 'assignee', 'assigner',
             ),
         ),
+        'closed.alert'=>array(
+            'group'=>'b.ticket.staff',
+            'name'=>/* @trans */ 'Ticket Completion Alert',
+            'desc'=>/* @trans */ 'Alert sent to department manager on ticket completion.',
+            'context' => array(
+                'ticket', 'recipient', 'staff',
+            ),
+        ),
         'transfer.alert'=>array(
             'group'=>'b.ticket.staff',
             'name'=>/* @trans */ 'Ticket Transfer Alert',
@@ -343,6 +351,10 @@ class EmailTemplateGroup {
 
     function getAssignedAlertMsgTemplate() {
         return $this->getMsgTemplate('assigned.alert');
+    }
+
+    function getClosedAlertMsgTemplate() {
+        return $this->getMsgTemplate('closed.alert');
     }
 
     function getOverdueAlertMsgTemplate() {

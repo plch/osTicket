@@ -1,0 +1,28 @@
+#
+# Email template: closed.alert.yaml
+#
+# Sent to department managers when a help topic assigned to their department is closed.
+#
+---
+notes: |
+    Sent to department managers when a help topic assigned to their department is closed.
+
+subject: |
+    Completed Ticket Alert
+body: |
+    <h3><strong>Hi %{recipient.name}</strong>,</h3>
+    A ticket assigned to %{ticket.dept.name} has
+    been closed by %{staff.name}.
+    <br>
+    <br>
+    Ticket: <a href="%{ticket.staff_link}">#%{ticket.number}</a>
+    <hr>
+    <div>To view or respond to the ticket, please <a
+    href="%{ticket.staff_link}"><span style="color: rgb(84, 141, 212);"
+    >login</span></a> to the support ticket system. You're receiving this
+    notice because the ticket is assigned directly to you or to a 
+    department of which you are the manager.</div>
+    <em style="font-size: small">Your friendly Customer Support
+    System</em><br>
+    <img src="cid:b56944cb4722cc5cda9d1e23a3ea7fbc" height="19"
+        alt="Powered by osTicket" width="126" style="width: 126px;">

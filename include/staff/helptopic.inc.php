@@ -32,6 +32,7 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
 <ul class="clean tabs" id="topic-tabs">
     <li class="active"><a href="#info"><i class="icon-info-sign"></i> <?php echo __('Help Topic Information'); ?></a></li>
     <li><a href="#routing"><i class="icon-ticket"></i> <?php echo __('New ticket options'); ?></a></li>
+    <li><a href="#notifications"><i class="icon-bell-alt"></i> <?php echo __('Notification options'); ?></a></li>
     <li><a href="#forms"><i class="icon-paste"></i> <?php echo __('Forms'); ?></a></li>
 </ul>
 
@@ -347,6 +348,25 @@ $info=Format::htmlchars(($errors && $_POST)?$_POST:$info, true);
     </tbody>
  </table>
 </div>
+
+<div class="hidden tab_content" id="notifications">
+    <div style="padding:8px 0;border-bottom: 2px dotted #ddd;">
+        <div><b class="big"><?php echo __('Notification options');?></b></div>
+    </div>
+    <table class="table" border="0" cellspacing="0" cellpadding="2">
+        <tbody>               
+            <tr>
+                <td width="180">
+                    <?php echo __('Completed Emails'); ?>:
+                </td>
+                <td>
+                    <input type="checkbox" name="completedEmails" value="1" <?php echo $info['plch_flags']&Topic::PLCH_FLAG_CLOSED_NOTIFICATIONS?'checked="checked"':''; ?> >
+                        <?php echo __('<strong>Enable</strong> emails to department manager when tickets are completed'); ?>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>    
 
 <div class="hidden tab_content" id="forms">
  <table id="topic-forms" class="table" border="0" cellspacing="0" cellpadding="2">

@@ -58,6 +58,14 @@ assignment_alert:
       - title: Default Ticket Assignment Alert Template
         href: /scp/templates.php?default_for=assigned.alert
 
+assignment_alert:
+    title: Ticket Completion Alert
+    content: >
+        Alert sent out to department manager when a ticket in their department is closed.
+    links:
+      - title: Default Ticket Completion Alert Template
+        href: /scp/templates.php?default_for=closed.alert
+
 transfer_alert:
     title: Ticket Transfer Alert
     content: >
