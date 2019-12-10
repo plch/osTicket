@@ -171,6 +171,7 @@ class StaffNav {
                 case 'lists':
                     if($this->staff->inListCustomizerRole($this->staff->getRoles()))
                         $subnav[]=array('desc'=>__('Marketing Lists'),'href'=>'lists-marketing.php', 'urls'=>array('lists-marketing.php'), 'iconclass'=>'lists');
+                    break;
                 case 'kbase':
                     $subnav[]=array('desc'=>__('FAQs'),'href'=>'kb.php', 'urls'=>array('faq.php'), 'iconclass'=>'kb');
                     if($staff) {
