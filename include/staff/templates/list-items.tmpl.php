@@ -26,16 +26,19 @@ if ($list->allowAdd()) { ?>
             <?php echo __('Add New Item'); ?>
         </a>
 <?php
-    if (method_exists($list, 'importCsv')) { ?>
-        <a class="action-button field-config"
-            href="#list/<?php
-            echo $list->getId(); ?>/import">
-            <i class="icon-upload"></i>
-            <?php echo __('Import Items'); ?>
-        </a>
-<?php
+    if($thisstaff->isAdmin()) {
+        if (method_exists($list, 'importCsv')) { ?>
+            <a class="action-button field-config"
+                href="#list/<?php
+                echo $list->getId(); ?>/import">
+                <i class="icon-upload"></i>
+                <?php echo __('Import Items'); ?>
+            </a>
+        <?php
+        }
     }
 } ?>
+    <?php if ($thisstaff->isAdmin()) {?>
         <span class="action-button pull-right" data-dropdown="#action-dropdown-more">
             <i class="icon-caret-down pull-right"></i>
             <span ><i class="icon-cog"></i> <?php echo __('More');?></span>
@@ -54,7 +57,8 @@ if ($list->allowAdd()) { ?>
             </ul>
         </div>
     </div>
-    <?php } ?>
+    <?php }
+    } ?>
 
     <div class="clear"></div>
     </div>
