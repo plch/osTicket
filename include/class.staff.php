@@ -473,7 +473,7 @@ implements AuthenticatedUser, EmailContact, TemplateVariable, Searchable {
 
     function inListCustomizerRole($roles)
     {
-        $allowedRoles = array("Administrators Role", "Marketing Role");
+        $allowedRoles = array("Marketing Role");
         foreach ($roles as $role)
         {
             if (in_array($role->getname(), $allowedRoles))
