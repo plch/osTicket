@@ -61,9 +61,9 @@ $showing=$pageNav->showing().' '._N('custom list', 'custom lists', $count);
     <?php foreach (DynamicList::objects()->order_by('-type', 'name')
                 ->limit($pageNav->getLimit())
                 ->offset($pageNav->getStart()) as $list) {
-            if($thisstaff->inListCustomizerRole($thisstaff->getRoles()))
+            if(!$thisstaff->isAdmin())
             {
-                if(!$thisstaff->isAdmin())
+                if($thisstaff->inListCustomizerRole($thisstaff->getRoles()))
                 {
                     if ($list->getName() == 'Presenter')
                     {
@@ -90,11 +90,12 @@ $showing=$pageNav->showing().' '._N('custom list', 'custom lists', $count);
                     </tr>
         <?php     }
                }
-               else
-               {
-                $sel = false;
-                if ($ids && in_array($form->get('id'),$ids))
-                    $sel = true; ?>
+            }
+            else
+            {
+             $sel = false;
+             if ($ids && in_array($form->get('id'),$ids))
+                 $sel = true; ?>
             <tr>
                 <td align="center">
                     <?php
@@ -113,8 +114,7 @@ $showing=$pageNav->showing().' '._N('custom list', 'custom lists', $count);
                 <td><?php echo $list->get('created'); ?></td>
                 <td><?php echo $list->get('updated'); ?></td>
             </tr>
-      <?php    }
-            }
+   <?php    }
         }
         ?>
     </tbody>
