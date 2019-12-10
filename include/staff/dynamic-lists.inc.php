@@ -10,25 +10,29 @@
         <div class="pull-left flush-left">
             <h2><?php echo __('Custom Lists'); ?></h2>
         </div>
-        <div class="pull-right flush-right">
-            <a href="lists.php?a=add" class="green button action-button"><i class="icon-plus-sign"></i> <?php
-                    echo __('Add New Custom List'); ?></a>
+        <?php if ($thisstaff->isAdmin())
+        { ?>
+            <div class="pull-right flush-right">
+                <a href="lists.php?a=add" class="green button action-button"><i class="icon-plus-sign"></i> <?php
+                        echo __('Add New Custom List'); ?></a>
 
-            <span class="action-button" data-dropdown="#action-dropdown-more">
-                    <i class="icon-caret-down pull-right"></i>
-                    <span ><i class="icon-cog"></i> <?php echo __('More');?></span>
-            </span>
-            <div id="action-dropdown-more" class="action-dropdown anchor-right">
-                <ul id="actions">
-                    <li class="danger">
-                        <a class="confirm" data-name="delete" href="lists.php?a=delete">
-                            <i class="icon-trash icon-fixed-width"></i>
-                            <?php echo __( 'Delete'); ?>
-                        </a>
-                    </li>
-                </ul>
+                <span class="action-button" data-dropdown="#action-dropdown-more">
+                        <i class="icon-caret-down pull-right"></i>
+                        <span ><i class="icon-cog"></i> <?php echo __('More');?></span>
+                </span>
+                <div id="action-dropdown-more" class="action-dropdown anchor-right">
+                    <ul id="actions">
+                        <li class="danger">
+                            <a class="confirm" data-name="delete" href="lists.php?a=delete">
+                                <i class="icon-trash icon-fixed-width"></i>
+                                <?php echo __( 'Delete'); ?>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
+        <?php
+         }?>
     </div>
 </div>
 <div class="clear"></div>
