@@ -30,14 +30,19 @@ $info=Format::htmlchars(($errors && $_POST) ? array_merge($info,$_POST) : $info)
         <?php } ?>
     </h2>
 <ul class="clean tabs" id="list-tabs">
+    <!-- PLCH custom logic for removing unwanted tabs for non-admins that can modify presenters list -->
+    <?php if ($thisstaff->isAdmin()) { ?>
     <li <?php if (!$list) echo 'class="active"'; ?>><a href="#definition">
         <i class="icon-plus"></i> <?php echo __('Definition'); ?></a></li>
+    <?php } ?>
 <?php if ($list) { ?>
     <li class="active"><a href="#items">
         <i class="icon-list"></i> <?php echo sprintf(__('Items (%d)'), $list->getItems()->count()); ?></a></li>
 <?php } ?>
+    <?php if ($thisstaff->isAdmin()) { ?>
     <li><a href="#properties">
         <i class="icon-asterisk"></i> <?php echo __('Properties'); ?></a></li>
+    <?php } ?>
 </ul>
 <div id="list-tabs_container">
 <div id="definition" class="tab_content <?php if ($list) echo 'hidden'; ?>">
