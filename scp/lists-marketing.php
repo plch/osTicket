@@ -1,5 +1,5 @@
 <?php
-require('admin.inc.php');
+require('admin-marketing.inc.php');
 require_once(INCLUDE_DIR.'class.list.php');
 
 

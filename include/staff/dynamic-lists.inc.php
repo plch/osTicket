@@ -1,4 +1,9 @@
-<form action="lists.php" method="POST" name="lists">
+
+<?php
+    $list = $thisstaff->isAdmin() ? "lists.php" : "lists-marketing.php";
+?>
+
+<form action="<?php $list ?>" method="POST" name="lists">
 
 <div class="sticky bar opaque">
     <div class="content">
@@ -52,29 +57,62 @@ $showing=$pageNav->showing().' '._N('custom list', 'custom lists', $count);
     <?php foreach (DynamicList::objects()->order_by('-type', 'name')
                 ->limit($pageNav->getLimit())
                 ->offset($pageNav->getStart()) as $list) {
-            $sel = false;
-            if ($ids && in_array($form->get('id'),$ids))
-                $sel = true; ?>
-        <tr>
-            <td align="center">
-                <?php
-                if ($list->isDeleteable()) { ?>
-                <input width="7" type="checkbox" class="ckb" name="ids[]"
-                value="<?php echo $list->getId(); ?>"
-                    <?php echo $sel?'checked="checked"':''; ?>>
-                <?php
-                } else {
-                    echo '&nbsp;';
-                }
-                ?>
-            </td>
-            <td><a href="?id=<?php echo $list->getId(); ?>"><?php echo
-            $list->getPluralName() ?: $list->getName(); ?></a></td>
-            <td><?php echo $list->get('created'); ?></td>
-            <td><?php echo $list->get('updated'); ?></td>
-        </tr>
-    <?php }
-    ?>
+            if($thisstaff->inListCustomizerRole($thisstaff->getRoles()))
+            {
+                if(!$thisstaff->isAdmin())
+                {
+                    if ($list->getName() == 'Presenter')
+                    {
+                        $sel = false;
+                        if ($ids && in_array($form->get('id'),$ids))
+                            $sel = true; ?>
+                    <tr>
+                        <td align="center">
+                            <?php
+                            if ($list->isDeleteable()) { ?>
+                            <input width="7" type="checkbox" class="ckb" name="ids[]"
+                            value="<?php echo $list->getId(); ?>"
+                                <?php echo $sel?'checked="checked"':''; ?>>
+                            <?php
+                            } else {
+                                echo '&nbsp;';
+                            }
+                            ?>
+                        </td>
+                        <td><a href="?id=<?php echo $list->getId(); ?>"><?php echo
+                        $list->getPluralName() ?: $list->getName(); ?></a></td>
+                        <td><?php echo $list->get('created'); ?></td>
+                        <td><?php echo $list->get('updated'); ?></td>
+                    </tr>
+        <?php     }
+               }
+               else
+               {
+                $sel = false;
+                if ($ids && in_array($form->get('id'),$ids))
+                    $sel = true; ?>
+            <tr>
+                <td align="center">
+                    <?php
+                    if ($list->isDeleteable()) { ?>
+                    <input width="7" type="checkbox" class="ckb" name="ids[]"
+                    value="<?php echo $list->getId(); ?>"
+                        <?php echo $sel?'checked="checked"':''; ?>>
+                    <?php
+                    } else {
+                        echo '&nbsp;';
+                    }
+                    ?>
+                </td>
+                <td><a href="?id=<?php echo $list->getId(); ?>"><?php echo
+                $list->getPluralName() ?: $list->getName(); ?></a></td>
+                <td><?php echo $list->get('created'); ?></td>
+                <td><?php echo $list->get('updated'); ?></td>
+            </tr>
+      <?php    }
+            }
+        }
+        ?>
     </tbody>
     <tfoot>
      <tr>
