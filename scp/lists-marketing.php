@@ -197,7 +197,9 @@ if($list || ($_REQUEST['a'] && !strcasecmp($_REQUEST['a'],'add'))) {
         "$('#content').data('tipNamespace', 'manage.custom_list');");
 }
 
-$nav->setTabActive('manage');
+$nav = new StaffNav($thisstaff);
+$nav->setTabActive('lists');
+
 require(STAFFINC_DIR.'header.inc.php');
 require(STAFFINC_DIR.$page);
 include(STAFFINC_DIR.'footer.inc.php');
