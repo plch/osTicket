@@ -139,6 +139,8 @@ class StaffNav {
             $this->tabs['tickets'] = array('desc'=>__('Tickets'),'href'=>'tickets.php','title'=>__('Ticket Queue'));
 
             $this->tabs['kbase'] = array('desc'=>__('Knowledgebase'),'href'=>'kb.php','title'=>__('Knowledgebase'));
+            if($this->staff->inListCustomizerRole($this->staff->getRoles()))
+                $this->tabs['lists']=array('desc'=>__('Marketing Lists'),'href'=>'lists-marketing.php','title'=>__('Marketing Lists'));
             if (!is_null($this->getRegisteredApps()))
                 $this->tabs['apps']=array('desc'=>__('Applications'),'href'=>'apps.php','title'=>__('Applications'));
         }
@@ -165,6 +167,10 @@ class StaffNav {
                 case 'users':
                     $subnav[] = array('desc' => __('User Directory'), 'href' => 'users.php', 'iconclass' => 'teams');
                     $subnav[] = array('desc' => __('Organizations'), 'href' => 'orgs.php', 'iconclass' => 'departments');
+                    break;
+                case 'lists':
+                    if($this->staff->inListCustomizerRole($this->staff->getRoles()))
+                        $subnav[]=array('desc'=>__('Marketing Lists'),'href'=>'lists-marketing.php', 'urls'=>array('lists-marketing.php'), 'iconclass'=>'lists');
                     break;
                 case 'kbase':
                     $subnav[]=array('desc'=>__('FAQs'),'href'=>'kb.php', 'urls'=>array('faq.php'), 'iconclass'=>'kb');

@@ -1,29 +1,38 @@
-<form action="lists.php" method="POST" name="lists">
+
+<?php
+    $list = $thisstaff->isAdmin() ? "lists.php" : "lists-marketing.php";
+?>
+
+<form action="<?php $list ?>" method="POST" name="lists">
 
 <div class="sticky bar opaque">
     <div class="content">
         <div class="pull-left flush-left">
             <h2><?php echo __('Custom Lists'); ?></h2>
         </div>
-        <div class="pull-right flush-right">
-            <a href="lists.php?a=add" class="green button action-button"><i class="icon-plus-sign"></i> <?php
-                    echo __('Add New Custom List'); ?></a>
+        <?php if ($thisstaff->isAdmin())
+        { ?>
+            <div class="pull-right flush-right">
+                <a href="lists.php?a=add" class="green button action-button"><i class="icon-plus-sign"></i> <?php
+                        echo __('Add New Custom List'); ?></a>
 
-            <span class="action-button" data-dropdown="#action-dropdown-more">
-                    <i class="icon-caret-down pull-right"></i>
-                    <span ><i class="icon-cog"></i> <?php echo __('More');?></span>
-            </span>
-            <div id="action-dropdown-more" class="action-dropdown anchor-right">
-                <ul id="actions">
-                    <li class="danger">
-                        <a class="confirm" data-name="delete" href="lists.php?a=delete">
-                            <i class="icon-trash icon-fixed-width"></i>
-                            <?php echo __( 'Delete'); ?>
-                        </a>
-                    </li>
-                </ul>
+                <span class="action-button" data-dropdown="#action-dropdown-more">
+                        <i class="icon-caret-down pull-right"></i>
+                        <span ><i class="icon-cog"></i> <?php echo __('More');?></span>
+                </span>
+                <div id="action-dropdown-more" class="action-dropdown anchor-right">
+                    <ul id="actions">
+                        <li class="danger">
+                            <a class="confirm" data-name="delete" href="lists.php?a=delete">
+                                <i class="icon-trash icon-fixed-width"></i>
+                                <?php echo __( 'Delete'); ?>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
+        <?php
+         }?>
     </div>
 </div>
 <div class="clear"></div>
@@ -52,29 +61,62 @@ $showing=$pageNav->showing().' '._N('custom list', 'custom lists', $count);
     <?php foreach (DynamicList::objects()->order_by('-type', 'name')
                 ->limit($pageNav->getLimit())
                 ->offset($pageNav->getStart()) as $list) {
-            $sel = false;
-            if ($ids && in_array($form->get('id'),$ids))
-                $sel = true; ?>
-        <tr>
-            <td align="center">
-                <?php
-                if ($list->isDeleteable()) { ?>
-                <input width="7" type="checkbox" class="ckb" name="ids[]"
-                value="<?php echo $list->getId(); ?>"
-                    <?php echo $sel?'checked="checked"':''; ?>>
-                <?php
-                } else {
-                    echo '&nbsp;';
-                }
-                ?>
-            </td>
-            <td><a href="?id=<?php echo $list->getId(); ?>"><?php echo
-            $list->getPluralName() ?: $list->getName(); ?></a></td>
-            <td><?php echo $list->get('created'); ?></td>
-            <td><?php echo $list->get('updated'); ?></td>
-        </tr>
-    <?php }
-    ?>
+            if(!$thisstaff->isAdmin())
+            {
+                if($thisstaff->inListCustomizerRole($thisstaff->getRoles()))
+                {
+                    if ($list->getName() == 'Presenter')
+                    {
+                        $sel = false;
+                        if ($ids && in_array($form->get('id'),$ids))
+                            $sel = true; ?>
+                    <tr>
+                        <td align="center">
+                            <?php
+                            if ($list->isDeleteable()) { ?>
+                            <input width="7" type="checkbox" class="ckb" name="ids[]"
+                            value="<?php echo $list->getId(); ?>"
+                                <?php echo $sel?'checked="checked"':''; ?>>
+                            <?php
+                            } else {
+                                echo '&nbsp;';
+                            }
+                            ?>
+                        </td>
+                        <td><a href="?id=<?php echo $list->getId(); ?>"><?php echo
+                        $list->getPluralName() ?: $list->getName(); ?></a></td>
+                        <td><?php echo $list->get('created'); ?></td>
+                        <td><?php echo $list->get('updated'); ?></td>
+                    </tr>
+        <?php     }
+               }
+            }
+            else
+            {
+             $sel = false;
+             if ($ids && in_array($form->get('id'),$ids))
+                 $sel = true; ?>
+            <tr>
+                <td align="center">
+                    <?php
+                    if ($list->isDeleteable()) { ?>
+                    <input width="7" type="checkbox" class="ckb" name="ids[]"
+                    value="<?php echo $list->getId(); ?>"
+                        <?php echo $sel?'checked="checked"':''; ?>>
+                    <?php
+                    } else {
+                        echo '&nbsp;';
+                    }
+                    ?>
+                </td>
+                <td><a href="?id=<?php echo $list->getId(); ?>"><?php echo
+                $list->getPluralName() ?: $list->getName(); ?></a></td>
+                <td><?php echo $list->get('created'); ?></td>
+                <td><?php echo $list->get('updated'); ?></td>
+            </tr>
+   <?php    }
+        }
+        ?>
     </tbody>
     <tfoot>
      <tr>
