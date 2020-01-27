@@ -1416,7 +1416,7 @@ tr + tr.form-header-row td {
   position: relative;
 }
 #ticketForm .table-form td {
-  padding: 0 5px;
+  padding: 10px 5px;
 }
 .table-form input[type='checkbox'] {
   margin: auto;
@@ -1429,4 +1429,22 @@ tr + tr.form-header-row td {
   padding-bottom: 10px;
 }
 
-/*Make attachments field stand out*/
+/*Styling to polish up the forms*/
+.table-form-container{
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+#dynamic-form label span:first-of-type{
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.table-form tr{
+  border-bottom:1px solid #333;
+}
+
+
+

@@ -227,10 +227,7 @@ $(function() {
 
             that.datepicker(config);
         });
-    }
-
-    $("span").html("Attachments").closest("td").addClass("attachments");
-	
+    }	
 });
 
 
