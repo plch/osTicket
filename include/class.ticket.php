@@ -3574,7 +3574,6 @@ implements RestrictedAccess, Threadable, Searchable {
                 // performed. For other origins, validate as usual
                 switch (strtolower($origin)) {
                 case 'email':
-                case 'auto':
                     return false;
                 case 'staff':
                     // Required 'Contact Information' fields aren't required
