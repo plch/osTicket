@@ -657,7 +657,13 @@ foreach (DynamicFormEntry::forTicket($ticket->getId()) as $form) {
             } ?>
             </td>
         </tr>
-<?php } ?>
+<?php }
+    //If form is Program details (formid 19 in dev) insert create graphics ticket
+    if($form->getFormId() == 19){
+    ?>
+        
+        <td colspan="2"><button id="createGraphics">Create Graphics Ticket</button>
+    <?php } ?>
     </tbody>
     </table>
 <?php } ?>

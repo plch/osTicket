@@ -228,6 +228,17 @@ $(function() {
             that.datepicker(config);
         });
     }
+
+    $("span").html("Attachments").closest("td").addClass("attachments");
+
+    $(document).on("click", "#createGraphics", function(){
+        var ajaxurl = $('.content h2 a').attr('href'),
+        data =  {'a': "graphics"};
+        $.post(ajaxurl, data, function (response) {
+            // Response div goes here.
+            alert(response);
+        });
+    });
 	
 });
 

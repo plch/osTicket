@@ -26,3 +26,11 @@ php.ini
 build/
 
 ldap_user_info/config.php
+.idea/osticket.iml
+.idea/.gitignore
+.idea/misc.xml
+.idea/modules.xml
+.idea/phing.xml
+.idea/php.xml
+.idea/vcs.xml
+.gitignore

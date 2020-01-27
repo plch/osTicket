@@ -374,8 +374,63 @@ if($_POST && !$errors):
                     $errors['err']=__('You must select action to perform');
             endswitch;
             break;
-        default:
+            default:
             $errors['err']=__('Unknown action');
+        case 'graphics':
+            $displayed = array();
+
+            foreach (DynamicFormEntry::forTicket($ticket->getId()) as $form) {
+                //Find fields to exclude if disabled by help topic
+                $disabled = Ticket::getMissingRequiredFields($ticket, true);
+            
+                // Skip core fields shown earlier in the ticket view
+                // TODO: Rewrite getAnswers() so that one could write
+                //       ->getAnswers()->filter(not(array('field__name__in'=>
+                //           array('email', ...))));
+                $answers = $form->getAnswers()->exclude(Q::any(array(
+                    'field__flags__hasbit' => DynamicFormField::FLAG_EXT_STORED,
+                    'field__name__in' => array('subject', 'priority'),
+                    'field__id__in' => $disabled,
+                )));
+                foreach($answers as $a) {
+                    if (!$a->getField()->isVisibleToStaff())
+                        continue;
+                    $displayed[] = $a;
+                }
+            }
+            $data = array();
+            $errors = array();
+            $data['source'] = 'AUTO';
+            $data['topicId'] = '3';
+            $data['uid'] = $ticket->getUserId(); //User id of staff member that created the program ticket
+            $data[40] = "Program Graphics: " . $ticket->getSubject(); // Job Name
+            $data[43] = $displayed[15]->getValue(); // DueDate
+            $data[41] = $displayed[16]->getValue(); // Instructions
+            $data[42] = $displayed[17]->getValue(); // Copy
+            $items = $displayed[18]->getValue();
+            //$item = array();
+            $data[46] = $items[0][0];
+            $data[47] = $items[0][1];
+            $data[48] = $items[0][2];
+            $data[49] = $items[0][3];
+            //$data[72] = $displayed[18]->getValue(); // items requested
+            $data[72] = "Array"; // items requested
+
+            //$data[42] = 'test details'; // Proof
+            //$data[42] = 'test details'; // Attachements
+            $autorespond = false;
+            $alert = false;
+            $graphics = Ticket::create($data, $errors, $data['source'], $autorespond, $alert);
+            
+            //create note in thread showing that a graphics ticket has been created
+            $note = array(
+                'title' => 'Graphics Ticket Created',
+                'body' => 'A Graphics ticket was created on '.date('m/d/Y')
+                );
+
+            $ticket->logNote($note['title'], $note['body'], $thisstaff);
+
+            break;
         endswitch;
     }elseif($_POST['a']) {
 

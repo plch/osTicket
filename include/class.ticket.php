@@ -3574,6 +3574,7 @@ implements RestrictedAccess, Threadable, Searchable {
                 // performed. For other origins, validate as usual
                 switch (strtolower($origin)) {
                 case 'email':
+                case 'auto':
                     return false;
                 case 'staff':
                     // Required 'Contact Information' fields aren't required
@@ -3618,6 +3619,7 @@ implements RestrictedAccess, Threadable, Searchable {
         $fields=array();
         switch (strtolower($origin)) {
             case 'web':
+            case 'auto':
                 $fields['topicId']  = array('type'=>'int',  'required'=>1, 'error'=>__('Select a Help Topic'));
                 break;
             case 'staff':

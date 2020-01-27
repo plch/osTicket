@@ -124,7 +124,7 @@ if (empty($formData)) {
         <?php } ?>
         </tbody>
     </table>
-    <button type="button" class="add-form-row secondary button small" name="AddRow"><i class="icon-plus"></i>&nbsp;&nbsp;Add Item</button>
+    <button type="button" class="add-form-row secondary button small" name="AddRow"><i class="icon-plus"></i>&nbsp;&nbsp;Add Another Item</button>
     <script class="row-template">
         <tr>
         <?php
