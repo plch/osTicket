@@ -127,9 +127,24 @@ class Validator {
                 if($values=explode(',', $this->input[$k]))
                     foreach($values as $v)
                         if(!preg_match_all(
+                                '/^([a-z0-9|-]+\.)*[a-z0-9|-]+\.[a-z]+$/',
+                                ltrim($v)))
+                            $this->errors[$k]=$field['error'];
+                break;
+            case 'cs-url': // Comma separated list of urls
+                if($values=explode(',', $this->input[$k]))
+                    foreach($values as $v)
+                        if(!preg_match_all(
                                 '/^(https?:\/\/)?((\*\.|\w+\.)?[\w-]+(\.[a-zA-Z]+)?(:([0-9]+|\*))?)+$/',
                                 ltrim($v)))
                             $this->errors[$k]=$field['error'];
+                break;
+            case 'ipaddr':
+                if($values=explode(',', $this->input[$k])){
+                    foreach($values as $v)
+                        if(!preg_match_all('/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/', ltrim($v)))
+                            $this->errors[$k]=$field['error'];
+                }
                 break;
             default://If param type is not set...or handle..error out...
                 $this->errors[$k]=$field['error'].' '.__('(type not set)');
@@ -204,6 +219,11 @@ class Validator {
         return $error == '';
     }
 
+    static function is_formula($text, &$error='') {
+        if (!preg_match('/^[^=\+@-].*$/s', $text))
+            $error = __('Content cannot start with the following characters: = - + @');
+        return $error == '';
+    }
 
     /*
      * check_ip
@@ -306,6 +326,37 @@ class Validator {
             $errors=array_merge($errors,$val->errors());
 
         return (!$errors);
+    }
+
+    function check_acl($backend) {
+        global $cfg;
+
+        $acl = $cfg->getACL();
+        if (empty($acl))
+            return true;
+        $ip = osTicket::get_client_ip();
+        if (empty($ip))
+            return false;
+
+        $aclbk = $cfg->getACLBackend();
+        switch($backend) {
+            case 'client':
+                if (in_array($aclbk, array(0,3)))
+                    return true;
+                break;
+            case 'staff':
+                if (in_array($aclbk, array(0,2)))
+                    return true;
+                break;
+            default:
+                return false;
+                break;
+        }
+
+        if (!in_array($ip, $acl))
+            return false;
+
+        return true;
     }
 }
 ?>

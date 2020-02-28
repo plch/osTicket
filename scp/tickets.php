@@ -37,10 +37,10 @@ if($_REQUEST['id'] || $_REQUEST['number']) {
          $errors['err']=sprintf(__('%s: Unknown or invalid ID.'), __('ticket'));
     elseif($_REQUEST['number'] && !($ticket=Ticket::lookup(array('number' => $_REQUEST['number']))))
          $errors['err']=sprintf(__('%s: Unknown or invalid number.'), __('ticket'));
-    elseif(!$ticket->checkStaffPerm($thisstaff)) {
-        $errors['err']=__('Access denied. Contact admin if you believe this is in error');
-        $ticket=null; //Clear ticket obj.
-    }
+     elseif(!$ticket->checkStaffPerm($thisstaff)) {
+         $errors['err']=__('Access denied. Contact admin if you believe this is in error');
+         $ticket=null; //Clear ticket obj.
+     }
 }
 
 if (!$ticket) {
@@ -374,9 +374,8 @@ if($_POST && !$errors):
                     $errors['err']=__('You must select action to perform');
             endswitch;
             break;
-            default:
+        default:
             $errors['err']=__('Unknown action');
-        
         endswitch;
     }elseif($_POST['a']) {
 
@@ -446,12 +445,13 @@ foreach ($queues as $_) {
     $nav->addSubMenu(function() use ($q, $queue, $children) {
         // A queue is selected if it is the one being displayed. It is
         // "child" selected if its ID is in the path of the one selected
+        $_selected = ($queue && $queue->getId() == $q->getId());
         $child_selected = $queue
             && ($queue->parent_id == $q->getId()
                 || false !== strpos($queue->getPath(), "/{$q->getId()}/"));
         include STAFFINC_DIR . 'templates/queue-navigation.tmpl.php';
 
-        return $child_selected;
+        return ($child_selected || $_selected);
     });
 }
 
@@ -495,19 +495,32 @@ if($ticket) {
             $f->filterFields(function($f) { return !$f->isStorable(); });
             $f->addMissingFields();
         }
-    } elseif($_REQUEST['a'] == 'print' && !$ticket->pdfExport($_REQUEST['psize'], $_REQUEST['notes']))
-        $errors['err'] = __('Unable to export the ticket to PDF for print.')
+    } elseif($_REQUEST['a'] == 'print') {
+        if (!extension_loaded('mbstring'))
+            $errors['err'] = sprintf('%s %s',
+                'mbstring',
+                __('extension required to print ticket to PDF'));
+        elseif (!$ticket->pdfExport($_REQUEST['psize'], $_REQUEST['notes'], $_REQUEST['events']))
+            $errors['err'] = __('Unable to export the ticket to PDF for print.')
+                .' '.__('Internal error occurred');
+    } elseif ($_GET['a'] == 'zip' && !$ticket->zipExport($_REQUEST['notes'], $_REQUEST['tasks'])) {
+        $errors['err'] = __('Unable to export the ticket to ZIP.')
             .' '.__('Internal error occurred');
+    } elseif (PluginManager::auditPlugin() && $_REQUEST['a'] == 'export' && strtolower($_REQUEST['t']) == 'audits') {
+      require_once(sprintf('phar:///%s/plugins/audit.phar/class.audit.php', INCLUDE_DIR));
+      $show = AuditEntry::$show_view_audits;
+      $filename = sprintf('%s-audits-%s.csv',
+              $ticket->getNumber(), strftime('%Y%m%d'));
+      $tableInfo = AuditEntry::getTableInfo($ticket, true);
+      if (!Export::audits('ticket', $filename, $tableInfo, $ticket, 'csv', $show))
+          $errors['err'] = __('Unable to dump query results.')
+              .' '.__('Internal error occurred');
+    }
 } else {
     $inc = 'templates/queue-tickets.tmpl.php';
     if ($_REQUEST['a']=='open' &&
-            $thisstaff->hasPerm(Ticket::PERM_CREATE, false))
+            $thisstaff->hasPerm(Ticket::PERM_CREATE, false)) {
         $inc = 'ticket-open.inc.php';
-    elseif ($_REQUEST['a'] == 'export' && $queue) {
-        // XXX: Check staff access?
-        if (!$queue->export())
-            $errors['err'] = __('Unable to export results.')
-                .' '.__('Internal error occurred');
     } elseif ($queue) {
         // XXX: Check staff access?
         $quick_filter = @$_REQUEST['filter'];

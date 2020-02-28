@@ -84,6 +84,7 @@ CREATE TABLE `%TABLE_PREFIX%sequence` (
 DROP TABLE IF EXISTS `%TABLE_PREFIX%sla`;
 CREATE TABLE `%TABLE_PREFIX%sla` (
   `id` int(11) unsigned NOT NULL auto_increment,
+  `schedule_id` int(10) unsigned NOT NULL default '0',
   `flags` int(10) unsigned NOT NULL default 3,
   `grace_period` int(10) unsigned NOT NULL default '0',
   `name` varchar(64) NOT NULL default '',
@@ -203,6 +204,7 @@ CREATE TABLE `%TABLE_PREFIX%department` (
   `pid` int(11) unsigned default NULL,
   `tpl_id` int(10) unsigned NOT NULL default '0',
   `sla_id` int(10) unsigned NOT NULL default '0',
+  `schedule_id` int(10) unsigned NOT NULL default '0',
   `email_id` int(10) unsigned NOT NULL default '0',
   `autoresp_email_id` int(10) unsigned NOT NULL default '0',
   `manager_id` int(10) unsigned NOT NULL default '0',
@@ -250,6 +252,7 @@ CREATE TABLE `%TABLE_PREFIX%email` (
   `mail_host` varchar(255) NOT NULL,
   `mail_protocol` enum('POP','IMAP') NOT NULL default 'POP',
   `mail_encryption` enum('NONE','SSL') NOT NULL,
+  `mail_folder` varchar(255) default NULL,
   `mail_port` int(6) default NULL,
   `mail_fetchfreq` tinyint(3) NOT NULL default '5',
   `mail_fetchmax` tinyint(4) NOT NULL default '30',
@@ -263,6 +266,9 @@ CREATE TABLE `%TABLE_PREFIX%email` (
   `smtp_port` int(6) default NULL,
   `smtp_secure` tinyint(1) NOT NULL default '1',
   `smtp_auth` tinyint(1) NOT NULL default '1',
+  `smtp_auth_creds` int(11) DEFAULT '0',
+  `smtp_userid` varchar(255) NOT NULL,
+  `smtp_userpass` varchar(255) CHARACTER SET ascii NOT NULL,
   `smtp_spoofing` tinyint(1) unsigned NOT NULL default '0',
   `notes` text,
   `created` datetime NOT NULL,
@@ -419,6 +425,41 @@ CREATE TABLE `%TABLE_PREFIX%role` (
   UNIQUE KEY `name` (`name`)
 ) DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `%TABLE_PREFIX%schedule`;
+CREATE TABLE `%TABLE_PREFIX%schedule` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `flags` int(11) unsigned NOT NULL DEFAULT '0',
+  `name` varchar(255) NOT NULL,
+  `timezone` varchar(64) DEFAULT NULL,
+  `description` varchar(255) NOT NULL,
+  `created` datetime NOT NULL,
+  `updated` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `%TABLE_PREFIX%schedule_entry`;
+CREATE TABLE `%TABLE_PREFIX%schedule_entry` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `schedule_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `flags` int(11) unsigned NOT NULL DEFAULT '0',
+  `sort` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `name` varchar(255) NOT NULL,
+  `repeats` varchar(16) NOT NULL DEFAULT 'never',
+  `starts_on` date DEFAULT NULL,
+  `starts_at` time DEFAULT NULL,
+  `ends_on` date DEFAULT NULL,
+  `ends_at` time DEFAULT NULL,
+  `stops_on` datetime DEFAULT NULL,
+  `day` tinyint(4) DEFAULT NULL,
+  `week` tinyint(4) DEFAULT NULL,
+  `month` tinyint(4) DEFAULT NULL,
+  `created` datetime NOT NULL,
+  `updated` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `schedule_id` (`schedule_id`),
+  KEY `repeats` (`repeats`)
+) DEFAULT CHARSET=utf8;
+
 DROP TABLE IF EXISTS `%TABLE_PREFIX%help_topic`;
 CREATE TABLE `%TABLE_PREFIX%help_topic` (
   `topic_id` int(11) unsigned NOT NULL auto_increment,
@@ -530,7 +571,7 @@ CREATE TABLE `%TABLE_PREFIX%staff` (
   `lastname` varchar(32) default NULL,
   `passwd` varchar(128) default NULL,
   `backend` varchar(32) default NULL,
-  `email` varchar(128) default NULL,
+  `email` varchar(255) default NULL,
   `phone` varchar(24) NOT NULL default '',
   `phone_ext` varchar(6) default NULL,
   `mobile` varchar(24) NOT NULL default '',
@@ -639,6 +680,7 @@ CREATE TABLE `%TABLE_PREFIX%thread_entry` (
   `body` text NOT NULL,
   `format` varchar(16) NOT NULL default 'html',
   `ip_address` varchar(64) NOT NULL default '',
+  `extra` text,
   `recipients` text,
   `created` datetime NOT NULL,
   `updated` datetime NOT NULL,
@@ -660,9 +702,19 @@ CREATE TABLE `%TABLE_PREFIX%thread_entry_email` (
   KEY `mid` (`mid`)
 ) DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `%TABLE_PREFIX%thread_entry_merge`;
+CREATE TABLE `%TABLE_PREFIX%thread_entry_merge` (
+  `id` int(11) unsigned NOT NULL auto_increment,
+  `thread_entry_id` int(11) unsigned NOT NULL,
+  `data` text,
+  PRIMARY KEY (`id`),
+  KEY `thread_entry_id` (`thread_entry_id`)
+) DEFAULT CHARSET=utf8;
+
 DROP TABLE IF EXISTS `%TABLE_PREFIX%ticket`;
 CREATE TABLE `%TABLE_PREFIX%ticket` (
   `ticket_id` int(11) unsigned NOT NULL auto_increment,
+  `ticket_pid` int(11) unsigned DEFAULT NULL,
   `number` varchar(20),
   `user_id` int(11) unsigned NOT NULL default '0',
   `user_email_id` int(11) unsigned NOT NULL default '0',
@@ -675,6 +727,7 @@ CREATE TABLE `%TABLE_PREFIX%ticket` (
   `email_id` int(11) unsigned NOT NULL default '0',
   `lock_id` int(11) unsigned NOT NULL default '0',
   `flags` int(10) unsigned NOT NULL default '0',
+  `sort` int(11) unsigned NOT NULL DEFAULT '0',
   `ip_address` varchar(64) NOT NULL default '',
   `source` enum('Web','Email','Phone','API','Other') NOT NULL default 'Other',
   `source_extra` varchar(40) NULL default NULL,
@@ -724,6 +777,7 @@ DROP TABLE IF EXISTS `%TABLE_PREFIX%thread_event`;
 CREATE TABLE `%TABLE_PREFIX%thread_event` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `thread_id` int(11) unsigned NOT NULL default '0',
+  `thread_type` char(1) NOT NULL DEFAULT '',
   `event_id` int(11) unsigned DEFAULT NULL,
   `staff_id` int(11) unsigned NOT NULL,
   `team_id` int(11) unsigned NOT NULL,
@@ -968,7 +1022,7 @@ CREATE TABLE `%TABLE_PREFIX%user_email` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `user_id` int(10) unsigned NOT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
-  `address` varchar(128) NOT NULL,
+  `address` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `address` (`address`),
   KEY `user_email_lookup` (`user_id`)

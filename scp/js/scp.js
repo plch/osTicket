@@ -209,7 +209,7 @@ var scp_prep = function() {
     $('form select#cannedResp').on('select2:opening', function (e) {
         var redactor = $('.richtext', $(this).closest('form')).data('redactor');
         if (redactor)
-            redactor.selection.save();
+            redactor.api('selection.save');
     });
 
     $('form select#cannedResp').change(function() {
@@ -230,17 +230,14 @@ var scp_prep = function() {
                 cache: false,
                 success: function(canned){
                     //Canned response.
-                    var box = $('#response',fObj),
-                        redactor = box.data('redactor');
-                    if(canned.response) {
+                    var box = $('#response', fObj),
+                        redactor = $R('#response');
+                    if (canned.response) {
                         if (redactor) {
-                            redactor.selection.restore();
-                            redactor.insert.html(canned.response);
+                            redactor.api('selection.restore');
+                            redactor.insertion.insertHtml(canned.response);
                         } else
                             box.val(box.val() + canned.response);
-
-                        if (redactor)
-                            redactor.observe.load();
                     }
                     //Canned attachments.
                     var ca = $('.attachments', fObj);
@@ -265,7 +262,7 @@ var scp_prep = function() {
             showButtonPanel: true,
             buttonImage: './images/cal.png',
             showOn:'both',
-            dateFormat: $.translate_format(c.date_format||'m/d/Y')
+            dateFormat: c.date_format || 'm/d/Y'
         });
 
     });
@@ -483,7 +480,7 @@ var scp_prep = function() {
 
   $('div.tab_content[id] div.error:not(:empty)').each(function() {
     var div = $(this).closest('.tab_content');
-    $('a[href^=#'+div.attr('id')+']').parent().addClass('error');
+    $('a[href^="#'+div.attr('id')+'"]').parent().addClass('error');
   });
 
   $('[data-toggle="tooltip"]').tooltip()
@@ -553,10 +550,7 @@ var fixupDatePickers = function() {
         var $e = $(e),
             d = $e.datepicker('getDate');
         if (!d || $e.data('fixed')) return;
-        var day = ('0'+d.getDate()).substr(-2),
-            month = ('0'+(d.getMonth()+1)).substr(-2),
-            year = d.getFullYear();
-        $e.val(year+'-'+month+'-'+day);
+        $e.val(d.toISOString());
         $e.data('fixed', true);
         $e.on('change', function() { $(this).data('fixed', false); });
     });
@@ -595,30 +589,7 @@ $(document).ajaxSend(function(event, xhr, settings) {
 /* Get config settings from the backend */
 jQuery.fn.exists = function() { return this.length>0; };
 
-$.translate_format = function(str) {
-    var translation = {
-        'DD':   'oo',
-        'D':    'o',
-        'EEEE': 'DD',
-        'EEE':  'D',
-        'MMMM': '||',   // Double replace necessary
-        'MMM':  '|',
-        'MM':   'mm',
-        'M':    'm',
-        '||':   'MM',
-        '|':    'M',
-        'yyyy': '`',
-        'yyy':  '`',
-        'yy':   'y',
-        'y':    'yy',
-        '`':    'yy'
-    };
-    // Change PHP formats to datepicker ones
-    $.each(translation, function(php, jqdp) {
-        str = str.replace(php, jqdp);
-    });
-    return str;
-};
+$.pjax.defaults.timeout = 30000;
 $(document).keydown(function(e) {
 
     if (e.keyCode == 27 && !$('#overlay').is(':hidden')) {
@@ -739,7 +710,7 @@ $.dialog = function (url, codes, cb, options) {
                         $('#msg_notice, #msg_error', $popup).delay(5000).slideUp();
                         $('div.tab_content[id] div.error:not(:empty)', $popup).each(function() {
                           var div = $(this).closest('.tab_content');
-                          $('a[href^=#'+div.attr('id')+']').parent().addClass('error');
+                          $('a[href^="#'+div.attr('id')+'"]').parent().addClass('error');
                         });
                     }
                 }
@@ -1048,6 +1019,38 @@ $.changeHash = function(hash, quiet) {
   }
 };
 
+// Exports
+$(document).on('click', 'a.export', function(e) {
+    e.preventDefault();
+    var url = 'ajax.php/'+$(this).attr('href').substr(1)
+    $.dialog(url, 201, function (xhr) {
+        var resp = $.parseJSON(xhr.responseText);
+        var checker = 'ajax.php/export/'+resp.eid+'/check';
+        $.dialog(checker, 201, function (xhr) { });
+        return false;
+     });
+    return false;
+});
+
+$(document).on('click', 'a.nomodalexport', function(e) {
+    e.preventDefault();
+    var url = 'ajax.php/'+$(this).attr('href').substr(1);
+
+     $.ajax({
+          type: "GET",
+          url: url,
+          dataType: 'json',
+          error:function(XMLHttpRequest, textStatus, errorThrown) {
+          },
+          success: function(resp) {
+              var checker = 'ajax.php/export/'+resp.eid+'/check';
+              $.dialog(checker, 201, function (xhr) { });
+              return false;
+          }
+    });
+    return false;
+});
+
 // Forms — submit, stay on same tab
 $(document).on('submit', 'form', function() {
     if (!!$(this).attr('action') && $(this).attr('action').indexOf('#') == -1)
@@ -1067,6 +1070,20 @@ $(document).on('click', 'a.collaborator, a.collaborators:not(.noclick)', functio
     });
     return false;
  });
+
+ //Merge
+ $(document).on('click', 'a.merge, a.merge:not(.noclick)', function(e) {
+     e.preventDefault();
+     var url = 'ajax.php/'+$(this).attr('href').substr(1);
+     $.dialog(url, 201, function (xhr) {
+        var resp = $.parseJSON(xhr.responseText);
+        $('#t'+resp.id+'-recipients').text(resp.text);
+        $('.tip_box').remove();
+     }, {
+         onshow: function() { $('#user-search').focus(); }
+     });
+     return false;
+  });
 
 // NOTE: getConfig should be global
 getConfig = (function() {
@@ -1128,10 +1145,11 @@ $(document).on('pjax:complete', function() {
 if ($.support.pjax) {
   $(document).on('click', 'a', function(event) {
     var $this = $(this);
+    var href = $this.attr('href');
     if (!$this.hasClass('no-pjax')
         && !$this.closest('.no-pjax').length
-        && $this.attr('href').charAt(0) != '#')
-      $.pjax.click(event, {container: $this.data('pjaxContainer') || '#pjax-container', timeout: 2000});
+        && href && href.charAt(0) != '#')
+      $.pjax.click(event, {container: $this.data('pjaxContainer') || '#pjax-container', timeout: 30000});
   })
 }
 
@@ -1176,7 +1194,7 @@ $(document).on('click.note', '.quicknote .action.edit-note', function(e) {
     if (note.closest('.dialog, .tip_box').length)
         T.addClass('no-bar small');
     body.replaceWith(T);
-    $.redact(T, { focusEnd: true });
+    T.redactor({ focusEnd: true });
     note.find('.action.edit-note').hide();
     note.find('.action.save-note').show();
     note.find('.action.cancel-edit').show();
@@ -1188,7 +1206,7 @@ $(document).on('click.note', '.quicknote .action.cancel-edit', function() {
         T = note.find('textarea'),
         body = $('<div class="body">');
     body.load('ajax.php/note/' + note.data('id'), function() {
-      try { T.redactor('core.destroy'); } catch (e) {}
+      try { T.redactor('stop'); } catch (e) {}
       T.replaceWith(body);
       note.find('.action.save-note').hide();
       note.find('.action.cancel-edit').hide();
@@ -1201,10 +1219,10 @@ $(document).on('click.note', '.quicknote .action.save-note', function() {
     var note = $(this).closest('.quicknote'),
         T = note.find('textarea');
     $.post('ajax.php/note/' + note.data('id'),
-      { note: T.redactor('code.get') },
+      { note: T.redactor('source.getCode') },
       function(html) {
         var body = $('<div class="body">').html(html);
-        try { T.redactor('core.destroy'); } catch (e) {}
+        try { T.redactor('stop'); } catch (e) {}
         T.replaceWith(body);
         note.find('.action.save-note').hide();
         note.find('.action.cancel-edit').hide();
@@ -1235,9 +1253,10 @@ $(document).on('click', '#new-note', function() {
     button = $('<input type="button">').val(__('Create'));
     button.click(function() {
       $.post('ajax.php/' + note.data('url'),
-        { note: T.redactor('code.get'), no_options: note.hasClass('no-options') },
+        { note: T.redactor('source.getCode'), no_options: note.hasClass('no-options') },
         function(response) {
-          $(T).redactor('core.destroy').replaceWith(note);
+          T.redactor('stop');
+          T.replaceWith(note);
           $(response).show('highlight').insertBefore(note.parent());
           $('.submit', note.parent()).remove();
         },
@@ -1249,7 +1268,7 @@ $(document).on('click', '#new-note', function() {
     note.replaceWith(T);
     $('<p>').addClass('submit').css('text-align', 'center')
         .append(button).appendTo(T.parent());
-    $.redact(T, { focusEnd: true });
+    T.redactor({ focusEnd: true });
     return false;
 });
 
@@ -1301,49 +1320,25 @@ window.relativeAdjust = setInterval(function() {
 
 // Add 'afterShow' event to jQuery elements,
 // thanks http://stackoverflow.com/a/1225238/1025836
-(function ($) {
+jQuery(function($) {
     var _oldShow = $.fn.show;
 
-    $.fn.show = function (/*speed, easing, callback*/) {
+    // This should work with jQuery 3 with or without jQuery UI
+    $.fn.show = function() {
         var argsArray = Array.prototype.slice.call(arguments),
-            duration = argsArray[0],
-            easing,
-            callback,
-            callbackArgIndex;
-
-        // jQuery recursively calls show sometimes; we shouldn't
-        //  handle such situations. Pass it to original show method.
-        if (!this.selector) {
-            _oldShow.apply(this, argsArray);
-            return this;
-        }
-
-        if (argsArray.length === 2) {
-            if ($.isFunction(argsArray[1])) {
-                callback = argsArray[1];
-                callbackArgIndex = 1;
-            } else {
-                easing = argsArray[1];
-            }
-        } else if (argsArray.length === 3) {
-            easing = argsArray[1];
-            callback = argsArray[2];
-            callbackArgIndex = 2;
-        }
-        return $(this).each(function () {
-            var obj = $(this),
-                oldCallback = callback,
-                newCallback = function () {
-                    if ($.isFunction(oldCallback)) {
-                        oldCallback.apply(obj);
-                    }
-                };
-            if (callback) {
-                argsArray[callbackArgIndex] = newCallback;
-            }
-            obj.trigger('beforeShow');
-            _oldShow.apply(obj, argsArray);
-            obj.trigger('afterShow');
+            arg = argsArray[0],
+            options = argsArray[1] || {duration: 0};
+        if (typeof(arg) === 'number')
+            options.duration = arg;
+        else
+            options.effect = arg;
+        return this.each(function () {
+            var obj = $(this);
+            _oldShow.call(obj, $.extend(options, {
+                complete: function() {
+                    obj.trigger('afterShow');
+                }
+            }));
         });
-    };
-})(jQuery);
+    }
+});

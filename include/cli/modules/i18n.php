@@ -209,16 +209,14 @@ class i18n_Compiler extends Module {
             $langs[] = $short;
         }
         foreach ($langs as $l) {
-            list($code, $js) = $this->_http_get(
-                sprintf('https://imperavi.com/download/redactor/langs/%s/',
-                    strtolower($l)));
-            if ($code == 200 && strlen($js) > 100) {
-                $phar->addFromString('js/redactor.js', $js);
+            if (file_exists(I18N_DIR . "vendor/redactor{$lang}.js")) {
+                $phar->addFromString('js/redactor.js', file_get_contents(
+                    I18N_DIR . "support/redactor/{$lang}.js"));
                 break;
             }
         }
         if ($code != 200)
-            $this->stderr->write($lang . ": Unable to fetch Redactor language file\n");
+            $this->stderr->write($lang . ": Cannot find Redactor language file\n");
 
         // JQuery UI Datepicker
         // https://github.com/jquery/jquery-ui/tree/master/ui/i18n
@@ -417,7 +415,7 @@ class i18n_Compiler extends Module {
                     break;
                 case T_WHITESPACE:
                     // noop
-                    continue;
+                    continue 2;
                 case T_STRING_VARNAME:
                 case T_NUM_STRING:
                 case T_ENCAPSED_AND_WHITESPACE:
@@ -472,7 +470,7 @@ class i18n_Compiler extends Module {
         while (list(,$T) = each($tokens)) {
             switch ($T[0]) {
             case T_WHITESPACE:
-                continue;
+                continue 2;
             case '(':
                 return $this->__read_args($tokens, $args);
             default:
@@ -500,7 +498,7 @@ class i18n_Compiler extends Module {
                     break;
                 }
                 if (!isset($funcs[$T[1]]))
-                    continue;
+                    continue 2;
                 $constants = $funcs[$T[1]];
                 if ($info = $this->__get_func_args($tokens, $constants))
                     $T_funcs[] = $info;
@@ -519,7 +517,7 @@ class i18n_Compiler extends Module {
                         case '@trans':
                             $translate = true;
                         default:
-                            continue;
+                            continue 2;
                         }
                     }
                 }

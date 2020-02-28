@@ -14,7 +14,6 @@ $(function() {
         $(".remove-form-row", table).show();
 
         PLCH.RedactorInit();
-        bindDynamicElements();
     });
 
     $(document).on("click", ".remove-form-row:not(.disabled)", function(e){
@@ -150,84 +149,29 @@ $(function() {
             }
         });
 
-        $('input[size="18"]').each(function() {
-
-            var empty = () => String.prototype.Empty = () => '';
-			var weekGap = 3;
-			var minDate = new Date();
-			minDate.setDate(minDate.getDate() + weekGap * 7);
-            var dateArray = minDate.toString().split(" ");
-
-            function formatDate(datePart)
-            {
-                var mins = "T00";
-                var secs = ":00";
-                var yy;
-                var mm;
-                var dd;
-
-                var months =
-                {
-                    "Jan": "01",
-                    "Feb": "02",
-                    "Mar": "03",
-                    "Apr": "04",
-                    "May": "05",
-                    "Jun": "06",
-                    "Jul": "07",
-                    "Aug": "08",
-                    "Sep": "09",
-                    "Oct": "10",
-                    "Nov": "11",
-                    "Dec": "12",
-                };
-
-                dd = datePart[2];
-                yy = datePart[3];
-    
-                mm = Object.keys(months)
-                           .map(key => (key === datePart[1]) ? months[key] : empty)
-                           .filter(val => val !== empty)[0];
-                
-                return yy +"-"+ mm +"-"+ dd + mins + secs;
-            }
-
-            var dateobject =
-            {
-                // Possibly include another ternary operator to display $(this).val() if < minDate
-                'type': 'datetime-local',
-                'min': window.location.search.includes("edit")   ? $(this).val() : formatDate(dateArray),
-                'value': window.location.search.includes("edit") ? $(this).val() : formatDate(dateArray)
-			};
-			
-            $(this).clone().attr(dateobject).insertAfter($(this)).prev().remove();
-        });
-		
-		$("input.dp").each(function() {
-            var that = $(this);
+        $("input.dp").each(function() {
             var config = {
                 numberOfMonths: 2,
                 showButtonPanel: true,
                 buttonImage: './images/cal.png',
-                showOn:'both',
-                dateFormat: $.translate_format(that.data("dateFormat"))
+                showOn:'both'
             }
 
-            if (that.data("minValue")) {
-                config.minDate = new Date(that.data("minValue"));
+            if ($(this).data("minValue")) {
+                config.minDate = new Date($(this).data("minValue"));
             }
 
-            if (that.data("maxValue")) {
-                if (that.data("maxValue") === "now") {
+            if ($(this).data("maxValue")) {
+                if ($(this).data("maxValue") === "now") {
                     config.maxDate = new Date();
                 } else {
-                    config.maxDate = new Date(that.data("maxValue"));
+                    config.maxDate = new Date($(this).data("maxValue"));
                 }
             }
 
-            that.datepicker(config);
+            $(this).datepicker(config);
         });
-    }	
+    }
 });
 
 

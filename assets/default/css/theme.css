@@ -1435,7 +1435,7 @@ tr + tr.form-header-row td {
   padding: 10px;
 }
 
-#dynamic-form label span:first-of-type{
+#dynamic-form>tr>td>label>span:first-of-type{
   font-weight: bold;
   font-size: 16px;
   margin-top: 5px;
@@ -1445,6 +1445,3 @@ tr + tr.form-header-row td {
 .table-form tr{
   border-bottom:1px solid #333;
 }
-
-
-

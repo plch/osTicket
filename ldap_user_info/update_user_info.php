@@ -56,7 +56,7 @@ $filter = $config->ldap_filter;
 // Comments are copied from the Net_LDAP2 manual...
 // We define a custom searchbase here. If you pass NULL, the basedn provided
 // in the Net_LDAP2 configuration will be used. This is often not what you want.
-$searchbase = $ldap_config->basedn;
+$searchbase = $ldap_config['basedn'];
 
 // Some options:
 // It is a good practice to limit the requested attributes to only those you actually want to use later.
@@ -120,11 +120,13 @@ if (!$mysqli->connect_errno) {
     /*jriggs org mapping*/ 
     $ad_departments = array() ;
     foreach ($array_ad_users as &$ad_row) {
-		$current_dept = $ad_row['department'][0];
-		if (!in_array($current_dept, $ad_departments)) {
-		$ad_departments[] = $current_dept; 
+		if(isset($ad_row['department'][0])) {
+			$current_dept = $ad_row['department'][0];
+			if (!in_array($current_dept, $ad_departments)) {
+			$ad_departments[] = $current_dept; 
+			}
 		}
-	}    
+	}     
      
     $res_organizations = $mysqli->query( "select name from ost_organization" );
     $current_org='';
@@ -159,7 +161,7 @@ if (!$mysqli->connect_errno) {
 		    echo $functions->logg("Modifiying now the following osTicket agent: " . $row_ostagents['username']);
 		    
 		    // Check if osTicket agent is also an LDAP user
-			if ($row_ostagents['username'] == $array_ad_users[$row_ostagents['username']]['samaccountname'][0]) {
+			if (isset($array_ad_users[$row_ostagents['username']]) && $row_ostagents['username'] == $array_ad_users[$row_ostagents['username']]['samaccountname'][0]) {
 				//DEBUG Stuff
 				//echo "Agent Username:".$row_ostagents['username']."<br>";
 				//echo "LDAP Username:".$array_ad_users[$row_ostagents['username']]['samaccountname'][0]."<br>";
@@ -253,7 +255,10 @@ if (!$mysqli->connect_errno) {
         
         /*JRIGGS*/
 
-        $dept = $mysqli->real_escape_string($array_ad_users[$row_ostusers['username']]['department'][0]);
+		$dept = '';
+		if(isset($array_ad_users[$row_ostusers['username']]['department'][0])){
+			$dept = $mysqli->real_escape_string($array_ad_users[$row_ostusers['username']]['department'][0]);
+		} 
         $user = $mysqli->real_escape_string($row_ostusers['username']);
         $qry_update_ostuser_dept='update ost_user u
                                     inner join ost_user_account ua on ua.user_id=u.id
@@ -275,8 +280,10 @@ if (!$mysqli->connect_errno) {
 		
 		$logString = "User information from LDAP: ";
 		foreach($config->ldap_attributes as $attribute) {
-			$array_user_ldap_attribute[$attribute] = $array_ad_users[$row_ostusers['username']][$attribute][0];
-			$logString = $logString."'".$attribute."'=".$array_user_ldap_attribute[$attribute]." ; ";
+			if(isset($array_ad_users[$row_ostusers['username']][$attribute][0])){
+				$array_user_ldap_attribute[$attribute] = $array_ad_users[$row_ostusers['username']][$attribute][0];
+				$logString = $logString."'".$attribute."'=".$array_user_ldap_attribute[$attribute]." ; ";
+			}
 		}
 		
 		//DEBUG: Show array
@@ -286,7 +293,7 @@ if (!$mysqli->connect_errno) {
 		echo $functions->logg($logString);
 		
 	    // Check if osTicket user is also an LDAP user
-		if ($row_ostusers['username'] == $array_user_ldap_attribute['samaccountname']) {
+		if (isset($array_user_ldap_attribute) && $row_ostusers['username'] == $array_user_ldap_attribute['samaccountname']) {
 		    // Update LDAP Attributes from AD for the osTicket user configured in config.php
 		    foreach($config->ost_contact_info_fields as $ost_contact_info_field_name => $ost_contact_info_field_ldapattr) {
 		    	//Even more debug stuff... :D
@@ -393,7 +400,8 @@ if (!$mysqli->connect_errno) {
 		}
 		
 		// DEBUG and LOGG End logging for that user
-		echo $functions->logg("Finished with the user: ".$array_user_ldap_attribute['cn']);
+		if(isset($array_user_ldap_attribute))
+			echo $functions->logg("Finished with the user: ".$array_user_ldap_attribute['cn']);
 		
 		/*
 		// DEBUG:	

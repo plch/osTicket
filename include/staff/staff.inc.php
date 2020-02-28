@@ -33,6 +33,8 @@ else {
     $info['id'] = $staff->getId();
     $qs += array('id' => $staff->getId());
 }
+
+$extras = new ArrayObject();
 ?>
 
 <form action="staff.php?<?php echo Http::build_query($qs); ?>" method="post" class="save" autocomplete="off">
@@ -52,6 +54,7 @@ else {
     <li><a href="#access"><?php echo __('Access'); ?></a></li>
     <li><a href="#permissions"><?php echo __('Permissions'); ?></a></li>
     <li><a href="#teams"><?php echo __('Teams'); ?></a></li>
+    <?php Signal::send('agenttab.audit', $staff, $extras); ?>
   </ul>
 
   <div class="tab_content" id="account">
@@ -442,6 +445,9 @@ foreach ($staff->teams as $TM) {
     </table>
   </div>
 
+  <!-- ============== Audits =================== -->
+<?php Signal::send('agent.audit', $staff, $extras); ?>
+
   <p style="text-align:center;">
       <input type="submit" name="submit" value="<?php echo $submit_text; ?>">
       <input type="reset"  name="reset"  value="<?php echo __('Reset');?>">
@@ -538,6 +544,7 @@ foreach ($staff->dept_access as $dept_access) {
 }
 
 foreach ($staff->teams as $member) {
+  if (!$member->team) continue;
   echo sprintf('joinTeam(%d, %s, %d, %s);', $member->team_id,
     JsonDataEncoder::encode($member->team->getName()),
     $member->isAlertsEnabled(),

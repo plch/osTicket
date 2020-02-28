@@ -197,6 +197,8 @@ class DynamicForm extends VerySimpleModel {
 
         // Soft Delete: Mark the form as deleted.
         $this->setFlag(self::FLAG_DELETED);
+        $type = array('type' => 'deleted');
+        Signal::send('object.deleted', $this, $type);
         return $this->save();
     }
 
@@ -1183,7 +1185,6 @@ class DynamicFormEntry extends VerySimpleModel {
     }
 
     function render($options=array()) {
-        if (is_array($options))
             $options += array('staff' => true);
         return $this->getForm()->render($options);
     }
@@ -1194,11 +1195,10 @@ class DynamicFormEntry extends VerySimpleModel {
             $field = $a->getField();
             if (!$field->hasData() || $field->isPresentationOnly())
                 continue;
-            $after = $field->to_database($field->getClean());
-            $before = $field->to_database($a->getValue());
-            if ($before == $after)
+            $changes = $field->getChanges();
+            if (!$changes)
                 continue;
-            $fields[$field->get('id')] = array($before, $after);
+            $fields[$field->get('id')] = $changes;
         }
         return $fields;
     }
@@ -1871,7 +1871,8 @@ class SelectionField extends FormField {
             // Add in the properties for all selected list items in sub
             // labeled by their field id
             foreach ($v as $id=>$L) {
-                if (!($li = DynamicListItem::lookup($id)))
+                if (!($li = DynamicListItem::lookup($id))
+                      || !$li->getListId())
                     continue;
                 foreach ($li->getFilterData() as $prop=>$value) {
                     if (!isset($data[$prop]))

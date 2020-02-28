@@ -12,7 +12,7 @@ if (empty($formData)) {
 
 //$isCreate = (isset($options['mode']) && $options['mode'] == 'create');
 ?>
-<div class="">
+<div>
     <div class="form-header" style="margin-bottom:0.5em">
         <div><?php echo Format::display($form->getInstructions()); ?></div>
     </div>

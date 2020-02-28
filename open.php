@@ -46,7 +46,8 @@ if ($_POST) {
         //Logged in...simply view the newly created ticket.
         if($thisclient && $thisclient->isValid()) {
             session_write_close();
-            session_regenerate_id();
+			// Had to comment this out to prevent a 500 on submission
+            // session_regenerate_id();
             @header('Location: tickets.php?id='.$ticket->getId());
         }
     }else{

@@ -307,7 +307,7 @@ $.refreshTicketView = function(interval) {
         return;
 
       clearInterval(refresh);
-      $.pjax({url: document.location.href, container:'#pjax-container'});
+      $.pjax({url: document.location.href, container:'#pjax-container', timeout: 30000});
     }, interval);
     $(document).on('pjax:start', function() {
         clearInterval(refresh);
@@ -343,6 +343,29 @@ var ticket_onload = function($) {
                 window.location.href = $redirect;
             else
                 $.pjax.reload('#pjax-container');
+        }, $options);
+
+        return false;
+    });
+
+    $(document).off('.inline-edit');
+    $(document).on('click.inline-edit', 'a.inline-edit', function(e) {
+        e.preventDefault();
+        var url = 'ajax.php/'
+        +$(this).attr('href').substr(1)
+        +'?_uid='+new Date().getTime();
+        var $options = $(this).data('dialog');
+        $.dialog(url, [201], function (xhr) {
+            var obj = $.parseJSON(xhr.responseText);
+            if (obj.id && obj.value) {
+                $('#field_'+obj.id).html(obj.value);
+                if (obj.value.includes('Empty'))
+                    $('#field_'+obj.id).addClass('faded');
+                else
+                    $('#field_'+obj.id).removeClass('faded');
+                $('#msg-txt').text(obj.msg);
+                $('div#msg_notice').show();
+            }
         }, $options);
 
         return false;
